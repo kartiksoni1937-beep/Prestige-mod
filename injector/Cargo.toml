@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["crates/loader", "crates/injector"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

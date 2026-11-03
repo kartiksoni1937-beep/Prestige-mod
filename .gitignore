@@ -1,0 +1,24 @@
+.gradle/
+build/
+run/
+out/
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.log
+hs_err_pid*
+# reverse-engineering scratch (pipeline tools, large intermediates)
+/reverse/
+/client/
+/logs/
+
+openvape.zip
+
+/dist/
+/injector/target/
+/tools
+
+# Development tools (not part of the mod)
+/.tools/

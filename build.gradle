@@ -1,0 +1,112 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version '1.17.21'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+loom {
+    accessWidenerPath = file('src/main/resources/prestige-client.accesswidener')
+    runs {
+        client {
+            client()
+            ideConfigGenerated(true)
+            runDir 'run'
+            programArg '--offlineDeveloperMode'
+            // dev command file / screenshot facility of the overlay: ./gradlew runClient -PuiCmd=<path>
+            if (project.hasProperty('uiCmd')) vmArg "-Dprestige.ui.cmd=${project.property('uiCmd')}"
+            // dev: -PdumpClasses=ap,C,c9 forces class init of instrumented classes (tools/java/ClinitDump.java, bridge/DumpHook)
+            if (project.hasProperty('dumpClasses')) vmArg "-Dprestige.dump=${project.property('dumpClasses')}"
+            // engine test driver (engine/EngineDev): ./gradlew runClient -PengineCmd=<command file> [-PengineReport=<seconds>] [-PquickPlay=<world>]
+            if (project.hasProperty('engineCmd')) vmArg "-Dprestige.engine.cmd=${project.property('engineCmd')}"
+            if (project.hasProperty('engineReport')) vmArg "-Dprestige.engine.report=${project.property('engineReport')}"
+            if (project.hasProperty('quickPlay')) { programArg '--quickPlaySingleplayer'; programArg project.property('quickPlay') }
+        }
+    }
+    mods {
+        "prestige" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+configurations {
+    // Libraries copied (unpacked) into the final mod jar so it is self-contained.
+    shade
+    implementation.extendsFrom shade
+    engineMappings
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // The ClickGUI no longer uses imgui-java: its natives are desktop-only (Windows/Linux x86_64, macOS) and its GL3
+    // backend needs GLFW, neither of which exists in PojavLauncher on Android. The GUI now renders through the
+    // client's own shader pipeline (see dev.zprestige.prestige.ui.NativeDrawList).
+
+    // ClassTransform (net.lenni0451, customised build); engine/EnginePlugin uses it to apply the client's @CTransformer hooks.
+    shade files('libs/classtransform-bundled.jar')
+    // Yarn tiny shipped as prestige-engine/mappings.tiny for the production (Intermediary) runtime
+    engineMappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filteringCharset "UTF-8"
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 21
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withSourcesJar()
+}
+
+jar {
+    // Unpack the shaded libs (imgui classes + native dll, ClassTransform) into the mod jar.
+    from({
+        configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
+    }) {
+        exclude 'META-INF/MANIFEST.MF', 'META-INF/*.SF', 'META-INF/*.RSA', 'META-INF/*.DSA'
+        exclude 'module-info.class', 'META-INF/versions/**'
+    }
+    from({ zipTree(configurations.engineMappings.singleFile) }) {
+        include 'mappings/mappings.tiny'
+        eachFile { it.relativePath = new RelativePath(true, 'prestige-engine', 'mappings.tiny') }
+        includeEmptyDirs = false
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+
+/**
+ * Offline self-check of the standalone build (no display or GL needed):
+ * manifest modules, engine transformers against the 1.21.11 mappings, repaired mesh contract.
+ */
+tasks.register('verifyClient', JavaExec) {
+    group = 'verification'
+    description = 'Verifies module metadata, the 42 ClassTransform game hooks and the repaired mesh contract.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'dev.zprestige.prestige.verify.ClientVerifier'
+    workingDir = layout.buildDirectory.dir('verify').get().asFile
+    doFirst { workingDir.mkdirs() }
+}
