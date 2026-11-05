@@ -1,36 +1,31 @@
 package dev.zprestige.prestige.gui;
 
-import dev.zprestige.prestige.Native;
-import dev.zprestige.prestige.render.MinecraftAccess;
+import dev.zprestige.prestige.ui.mc.Overlay;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.Text;
 
-public class ClickGuiScreen extends BaseScreen implements MinecraftAccess {
-    private boolean nativeGuiShown = false;
-    private boolean guiClosed = false;
+public class ClickGuiScreen extends Screen {
+    public ClickGuiScreen() {
+        super(Text.of(""));
+    }
 
     public void resetClosedState() {
-        this.guiClosed = false;
+        Overlay.close();
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        if (this.nativeGuiShown && !Native.isMenuOpen()) {
-            this.close();
-        } else {
-            if (!this.nativeGuiShown && !this.guiClosed) {
-                if (!Native.isMenuOpen()) {
-                    Native.toggleMenu();
-                }
-
-                this.nativeGuiShown = true;
-            }
-        }
+        // Keep this screen alive as a hook carrier so the game continues rendering and updating underneath.
+        // The real ClickGUI is the overlay (dev.zprestige.prestige.ui.mc.Overlay) drawn by the RenderSystem.flipFrame mixin.
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        this.close();
-        return super.mouseClicked(mouseX, mouseY, button);
+        if (Overlay.visible) {
+            Overlay.onMouseButton(button, 0);
+        }
+        return true;
     }
 
     @Override
@@ -49,12 +44,7 @@ public class ClickGuiScreen extends BaseScreen implements MinecraftAccess {
 
     @Override
     public void close() {
-        this.guiClosed = true;
-        this.nativeGuiShown = false;
-        if (Native.isMenuOpen()) {
-            Native.toggleMenu();
-        }
-
+        Overlay.close();
         super.close();
     }
 }
