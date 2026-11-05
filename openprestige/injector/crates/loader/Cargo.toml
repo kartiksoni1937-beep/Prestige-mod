@@ -1,0 +1,8 @@
+[package]
+name = "prestige_native"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib"]

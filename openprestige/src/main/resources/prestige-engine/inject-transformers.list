@@ -1,0 +1,3 @@
+dev.zprestige.prestige.inject.hooks.MouseHooks
+dev.zprestige.prestige.inject.hooks.KeyboardHooks
+dev.zprestige.prestige.inject.hooks.RenderSystemHooks
