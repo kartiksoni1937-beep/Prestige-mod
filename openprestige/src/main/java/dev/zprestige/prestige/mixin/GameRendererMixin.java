@@ -85,7 +85,11 @@ public class GameRendererMixin {
                         1000.0F,
                         3000.0F
                     );
-                    CameraMatrices context = HookBridge.createHudRenderContext(proj, HookBridge.createHudModelViewMatrix().setTranslation(0.0F, 0.0F, -10000.0F), null);
+                    // The projection above is ortho(..., near 1000, far 3000), so content is only inside the clip volume
+                    // while its eye-space z sits in [-3000, -1000]. The 2D queues emit z near 0, so the view must move them
+                    // to -2000 (the pairing this near/far pair was written for). At -10000 every GUI/HUD primitive landed at
+                    // clip-space z 8 and was clipped away without an error, which is why the menu never appeared.
+                    CameraMatrices context = HookBridge.createHudRenderContext(proj, HookBridge.createHudModelViewMatrix().setTranslation(0.0F, 0.0F, -2000.0F), null);
                     HookBridge.renderHudPass(context);
                     renderFailed = false;
                 } finally {
