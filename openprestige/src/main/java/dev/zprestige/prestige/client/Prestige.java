@@ -93,6 +93,8 @@ public class Prestige implements ModInitializer {
             inventorySwapQueue = new InventorySwapQueue();
             keybindManager = new KeybindManager();
             notificationManager = new NotificationManager();
+            AutoConfig.load();
+            AutoConfig.registerSaveHook();
             RenderCore.setRenderThread(Thread.currentThread());
             RenderEvents.HUD_RENDER
                 .register(
