@@ -30,6 +30,30 @@ public class RoundedOutlineShader extends ShaderBase {
         INSTANCE.queueOutline(buffers, context, matrix, x, y, width, height, color.getRGB(), ((Vector4f)RADII_SCRATCH.get()).set(radius), thickness);
     }
 
+    /** Scissor-aware rounded outline used by the ClickGUI draw list (GUI-pixel clip rectangle, or null). */
+    public static void enqueueClipped(Matrix4f matrix, float x, float y, float width, float height, Color color, float radius, float thickness, Vector4f scissor) {
+        DrawPipeline drawMode = INSTANCE.getDrawMode(((Vector4f)RADII_SCRATCH.get()).set(radius), thickness);
+        float radiusX = radius;
+        float edgeSize = 2.0F * thickness + radiusX + 2.0F;
+        int argb = color.getRGB();
+        ((DrawCommandQueue)ShapeRenderer.drawQueue.get())
+            .enqueue(new CallbackDrawCommand(drawMode, scissor, (depth, builder) -> {
+                float z = (Float) depth;
+                int abgrColor = ShapeRenderer.argbToAbgr(argb);
+                MeshBuilder mesh = (MeshBuilder)builder;
+                mesh.beginShape();
+                if (edgeSize * 2.0F >= Math.min(width, height)) {
+                    addSubQuad(mesh, matrix, z, abgrColor, width, height, x, y, width, height, 0.0F, 0.0F, width, height);
+                } else {
+                    addSubQuad(mesh, matrix, z, abgrColor, width, height, x, y, width, edgeSize, 0.0F, height - edgeSize, width, height);
+                    addSubQuad(mesh, matrix, z, abgrColor, width, height, x, y + height - edgeSize, width, edgeSize, 0.0F, 0.0F, width, edgeSize);
+                    addSubQuad(mesh, matrix, z, abgrColor, width, height, x, y + edgeSize, edgeSize, height - 2.0F * edgeSize, 0.0F, edgeSize, edgeSize, height - edgeSize);
+                    addSubQuad(mesh, matrix, z, abgrColor, width, height, x + width - edgeSize, y + edgeSize, edgeSize, height - 2.0F * edgeSize, width - edgeSize, edgeSize, width, height - edgeSize);
+                }
+                mesh.generateIndices(GlPrimitive.QUADS).resetBaseVertex();
+            }));
+    }
+
     private void queueOutline(BufferSource unusedBuffers, CameraMatrices unusedContext, Matrix4f matrix, float x, float y, float width, float height, int argb, Vector4f radii, float thickness) {
         DrawPipeline drawMode = this.getDrawMode(radii, thickness);
         float radiusX = radii.x;

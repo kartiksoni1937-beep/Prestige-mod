@@ -96,6 +96,23 @@ public class RoundedTextureShader extends ShaderBase {
         INSTANCE.queueTextureRegion(buffers, context, matrix, texture, x, y, width, height, u, v, regionWidth, regionHeight, radii, color, BlendMode.MULTIPLY);
     }
 
+    /** Scissor-aware texture quad used by the ClickGUI draw list (GUI-pixel clip rectangle, or null). */
+    public static void enqueueClipped(Matrix4f matrix, GlTextureHandle texture, float x, float y, float width, float height, Color color, BlendMode blendMode, Vector4f scissor) {
+        DrawPipeline drawMode = INSTANCE.getDrawMode(texture, new Vector4f(0.0F), blendMode, true);
+        int argb = color.getRGB();
+        int abgr = (argb >> 24 & 0xFF) << 24 | (argb & 0xFF) << 16 | (argb >> 8 & 0xFF) << 8 | (argb >> 16 & 0xFF);
+        ((DrawCommandQueue)ShapeRenderer.drawQueue.get())
+            .enqueue(new CallbackDrawCommand(drawMode, scissor, (depth, builder) -> {
+                float z = (Float) depth;
+                ((MeshBuilder)builder).beginShape()
+                    .putTransformedVertex(matrix, x, y + height, z).putFloats(new float[]{0.0F, 0.0F}).putFloats(new float[]{width, height}).putColor(abgr)
+                    .putTransformedVertex(matrix, x + width, y + height, z).putFloats(new float[]{1.0F, 0.0F}).putFloats(new float[]{width, height}).putColor(abgr)
+                    .putTransformedVertex(matrix, x + width, y, z).putFloats(new float[]{1.0F, 1.0F}).putFloats(new float[]{width, height}).putColor(abgr)
+                    .putTransformedVertex(matrix, x, y, z).putFloats(new float[]{0.0F, 1.0F}).putFloats(new float[]{width, height}).putColor(abgr)
+                    .generateIndices(GlPrimitive.QUADS).resetBaseVertex();
+            }));
+    }
+
     private DrawPipeline getDrawMode(GlTextureHandle texture, Vector4f radii, BlendMode blendMode, boolean depthTest) {
         TexturedDrawModeKey cacheKey = new TexturedDrawModeKey(texture, radii, blendMode, depthTest);
         return (DrawPipeline)DRAW_MODE_CACHE.computeIfAbsent(cacheKey, mapKey -> {

@@ -134,8 +134,16 @@ public class MsdfFont {
     }
 
     public void drawString(Matrix4f matrix, String text, float textX, float textY, float size, int color) {
+        this.drawString(matrix, text, textX, textY, size, color, null);
+    }
+
+    /**
+     * Draws a string with an optional scissor rectangle (GUI pixels). The ClickGUI needs clipping for its scrolling
+     * lists and popups; a null rectangle behaves exactly like {@link #drawString(Matrix4f, String, float, float, float, int)}.
+     */
+    public void drawString(Matrix4f matrix, String text, float textX, float textY, float size, int color, org.joml.Vector4f scissor) {
         DrawCommandQueue queue = (DrawCommandQueue)this.drawQueueProvider.apply(this);
-        DrawBatchKey key = this.getBatchKey();
+        DrawBatchKey key = scissor == null ? this.getBatchKey() : new DrawBatchKey(scissor, this.getPipeline());
         Matrix4f transform = new Matrix4f(matrix);
         float baseline = this.metrics.getAscender() * size;
         float[] cursorX = new float[]{textX};

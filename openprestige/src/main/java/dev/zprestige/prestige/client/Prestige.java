@@ -151,7 +151,8 @@ public class Prestige implements ModInitializer {
                 || eventBus.hasListeners(Render2DEvent.class)
                 || eventBus.hasListenerOfType(FrameEvent.class, Module.class)
                 || hudEditorScreen != null && hudEditorScreen.shouldRenderHud()
-                || notificationManager != null && notificationManager.hasNotifications();
+                || notificationManager != null && notificationManager.hasNotifications()
+                || clickGuiScreen != null && MinecraftAccess.mc.currentScreen == clickGuiScreen;
     }
 
     public static void postFrameEvent() {

@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "dev.zprestige.prestige.ui.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["RenderSystemMixin", "MouseHandlerMixin", "KeyboardHandlerMixin", "EventBusStatsMixin"],
+  "client": ["EventBusStatsMixin"],
   "injectors": { "defaultRequire": 1 }
 }

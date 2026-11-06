@@ -26,8 +26,14 @@ public class KeybindManager implements MinecraftAccess {
     public void onKey(KeyEvent event) {
         if (event.getAction() == 0) {
             if (event.getKey() == VirtualKeyMapper.toGlfwKey(Prestige.moduleManager.getMenu().getMenuKey().getValue())) {
-                mc.setScreen(Prestige.clickGuiScreen);
-                Prestige.clickGuiScreen.resetClosedState();
+                if (mc.currentScreen instanceof dev.zprestige.prestige.gui.ClickGuiScreen) {
+                    // The menu screen consumes the key itself through Input; closing here keeps a double toggle from
+                    // reopening the screen in the same tick.
+                    mc.setScreen(null);
+                } else {
+                    Prestige.clickGuiScreen.resetClosedState();
+                    mc.setScreen(Prestige.clickGuiScreen);
+                }
             }
         }
 
