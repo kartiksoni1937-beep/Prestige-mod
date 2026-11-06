@@ -28,6 +28,8 @@ public final class Bootstrap {
 
     static Map<String, Mod> mods;
     static final Map<Class<?>, Map<String, Field>> FIELD_CACHE = new HashMap<>();
+    /** Problems reported at most once, so a broken manifest row does not spam the log every constructor. */
+    private static final Set<String> REPORTED = new HashSet<>();
 
     public static synchronized Map<String, Mod> mods() {
         if (mods != null) return mods;
@@ -37,7 +39,11 @@ public final class Bootstrap {
             Manifest m = new Gson().fromJson(new String(in.readAllBytes(), StandardCharsets.UTF_8), Manifest.class);
             if (m != null && m.modules != null)
                 for (Mod x : m.modules) mods.put(x.clazz, x);
-        } catch (Throwable ignored) {}
+            if (mods.isEmpty()) System.err.println("[Prestige] module manifest is empty; no module will be registered");
+        } catch (Throwable error) {
+            System.err.println("[Prestige] could not read prestige_ui/manifest_live.json: " + error);
+            error.printStackTrace(System.err);
+        }
         return mods;
     }
 
@@ -50,7 +56,7 @@ public final class Bootstrap {
     }
 
     /** Loads the module class named in the manifest, also accepting the '_'-suffixed twin the source route uses on case-insensitive file systems. */
-    static Class<?> loadModuleClass(String name, ClassLoader cl) throws ClassNotFoundException {
+    public static Class<?> loadModuleClass(String name, ClassLoader cl) throws ClassNotFoundException {
         Throwable first = null;
         String n = name;
         for (int i = 0; i < 3; i++, n += "_") {
@@ -68,14 +74,29 @@ public final class Bootstrap {
             Mod mod = modFor(module.getClass());
             if (mod == null) return;
             ClassLoader cl = module.getClass().getClassLoader();
-            for (Setting s : mod.settings) {
-                try {
-                    Object setting = make(cl, s);
-                    if (setting != null) set(module, s.field, setting);
-                } catch (Throwable ignored) {}
+            if (mod.settings != null) {
+                for (Setting s : mod.settings) {
+                    try {
+                        Object setting = make(cl, s);
+                        if (setting == null) {
+                            report(module.getClass(), "setting '" + s.name + "' has unsupported type " + s.setClass);
+                        } else if (!set(module, s.field, setting)) {
+                            report(module.getClass(), "field '" + s.field + "' for setting '" + s.name + "' was not found or has an incompatible type");
+                        }
+                    } catch (Throwable error) {
+                        report(module.getClass(), "setting '" + s.name + "' could not be built: " + error);
+                    }
+                }
             }
             setMeta(module, mod);
-        } catch (Throwable ignored) {}
+        } catch (Throwable error) {
+            report(module.getClass(), "pre-injection failed: " + error);
+        }
+    }
+
+    private static void report(Class<?> type, String message) {
+        String key = type.getName() + "|" + message;
+        if (REPORTED.add(key)) System.err.println("[Prestige] " + type.getSimpleName() + ": " + message);
     }
 
     /** Post-construction pass: metadata + settings list completeness. */
@@ -101,7 +122,9 @@ public final class Bootstrap {
                 Object v = get(module, s.field);
                 if (v != null && !list.contains(v)) list.add(v);
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable error) {
+            report(module.getClass(), "post-injection failed: " + error);
+        }
     }
 
     static Object get(Object obj, String field) {
@@ -190,18 +213,20 @@ public final class Bootstrap {
         return null;
     }
 
-    static void set(Object obj, String field, Object value) throws Exception {
+    /** Assigns the reconstructed setting; returns false when the field does not exist or has another type. */
+    static boolean set(Object obj, String field, Object value) throws Exception {
         Class<?> c = obj.getClass();
         while (c != null) {
             for (Field f : c.getDeclaredFields()) {
                 if (f.getName().equals(field) && f.getType().isAssignableFrom(value.getClass())) {
                     f.setAccessible(true);
                     f.set(obj, value);
-                    return;
+                    return true;
                 }
             }
             c = c.getSuperclass();
         }
+        return false;
     }
 
     static Constructor<?> ctor(Class<?> c, Class<?>... p) throws Exception {

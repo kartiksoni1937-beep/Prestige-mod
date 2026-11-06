@@ -4,7 +4,6 @@ import dev.zprestige.prestige.Module;
 import dev.zprestige.prestige.client.Prestige;
 import dev.zprestige.prestige.inject.Bootstrap;
 import dev.zprestige.prestige.inject.NativeBridge;
-import dev.zprestige.prestige.ui.mc.Overlay;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,6 @@ public class SelfDestruct extends Module {
     @Override
     public void onEnable() {
         Prestige.selfDestructed = true;
-        Overlay.shutdown();
         mc.setScreen(null);
 
         List<Module> modules = new ArrayList<>(Prestige.moduleManager.getModules());

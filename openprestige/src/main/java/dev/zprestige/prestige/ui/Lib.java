@@ -1,31 +1,45 @@
 package dev.zprestige.prestige.ui;
 
-import imgui.ImDrawList;
-import imgui.ImFont;
-import imgui.ImGui;
-import imgui.ImVec2;
+import dev.zprestige.prestige.client.Prestige;
+import dev.zprestige.prestige.render.GlTextureHandle;
+import dev.zprestige.prestige.render.MsdfFont;
 
 /**
  * Java mirror of the original client's draw wrappers (ImDrawList helpers in java-product.dll,
  * sub_180119xxx..sub_18011Exxx). Names are the semantic names I gave the IDA functions.
  * All colours are float[4] (r,g,b,a) like the original; global alpha is applied at conversion.
+ *
+ * <p><b>Android port note:</b> the original wrappers called into imgui-java's ImDrawList, whose native library
+ * exists only for desktop x86_64/arm64 operating systems and which needs a desktop GL3 backend. The wrappers now emit
+ * the same primitives into {@link NativeDrawList}, which replays them through the client's own shaders and MSDF font.
+ * Every page (Ui, ModulesPage, DetailPage, ...) keeps its original layout code and coordinates unchanged.
  */
 public final class Lib {
-    public static ImDrawList dl;
-    /** dword_180744E9C / dword_180744E98: window origin added to every position. */
+    /** The frame's draw list (ImGui's foreground draw list in the original). */
+    public static NativeDrawList dl = new NativeDrawList();
+    /** dword_180744E9C / dword_180744E98: window origin added to every position (GUI pixels). */
     public static float ox, oy;
     /** dword_1806FC238: global alpha multiplier. */
     public static float gAlpha = 1f;
     /** UI scale (1 = native 1100x700 canvas). */
     public static float scale = 1f;
 
-    /** qword_1807453B0[] / dword_180371DD0[]: fonts 0..10 and their pixel sizes. */
-    public static final ImFont[] FONT = new ImFont[11];
+    /** dword_180371DD0[]: font pixel sizes 0..10. */
     public static final float[] FONT_SIZE = {26, 29, 20, 17, 14, 18, 24, 24, 34, 34, 20};
     /** Pixel size each font is actually baked at (FONT_SIZE * scale, rounded). */
     public static float[] BAKED = FONT_SIZE.clone();
 
     private Lib() {}
+
+    /** The client's bundled MSDF font (loaded once through FontManager). */
+    static MsdfFont font() {
+        return Prestige.fontManager == null ? null : Prestige.fontManager.getDefaultFont();
+    }
+
+    /** Registers a GL texture and returns the opaque id the pages pass to {@link #image}. */
+    public static long texture(GlTextureHandle handle) {
+        return NativeDrawList.registerTexture(handle);
+    }
 
     /** sub_180119F30: float rgba -> ImU32 (IM_COL32 layout), global alpha applied. */
     public static int col(float[] c) {
@@ -85,7 +99,10 @@ public final class Lib {
     public static void fillRect(float x, float y, float w, float h, float rounding, float[] c) {
         if (dl == null) return;
         float[] a = pt(x, y), b = pt(x + w, y + h);
-        if (rounding > 0.5f || XF.isEmpty()) { dl.addRectFilled(a[0], a[1], b[0], b[1], col(c), rounding > 0.5f ? rounding * scale : 0f, 0); return; }
+        if (rounding > 0.5f || XF.isEmpty()) {
+            dl.addRectFilled(a[0], a[1], b[0], b[1], col(c), rounding > 0.5f ? rounding * scale : 0f, 0);
+            return;
+        }
         float[] q2 = pt(x + w, y), q4 = pt(x, y + h);
         dl.addQuadFilled(a[0], a[1], q2[0], q2[1], b[0], b[1], q4[0], q4[1], col(c));
     }
@@ -95,11 +112,19 @@ public final class Lib {
         float[] a = pt(x, y), b = pt(x + w, y + h);
         dl.addRect(a[0], a[1], b[0], b[1], col(c), rounding * scale, 0, thickness * scale);
     }
-    /** AddRectFilled with explicit ImDrawFlags (sub_1800A2790 direct). */
+    /** AddRectFilled with explicit corner flags (sub_1800A2790 direct). */
     public static void fillRectFlags(float x, float y, float w, float h, float rounding, int flags, float[] c) {
         if (dl == null) return;
         float[] a = pt(x, y), b = pt(x + w, y + h);
-        dl.addRectFilled(a[0], a[1], b[0], b[1], col(c), rounding * scale, flags);
+        float r = rounding * scale;
+        // Corner flags in the captured original are not ImGui's low nibble (80 and 160 are used); both stand for a
+        // partially rounded strip. 80 rounds the top edge, 160 the bottom edge, anything else rounds every corner.
+        boolean top = flags == 80, bottom = flags == 160;
+        float tr = top || (!top && !bottom) ? r : 0f;
+        float br = bottom || (!top && !bottom) ? r : 0f;
+        float tl = top || (!top && !bottom) ? r : 0f;
+        float bl = bottom || (!top && !bottom) ? r : 0f;
+        dl.addRectFilled(a[0], a[1], b[0], b[1], col(c), tr, br, tl, bl, flags);
     }
     /** sub_18011DED0 */
     public static void rect(float x, float y, float w, float h, float rounding, boolean filled, float[] c) {
@@ -119,33 +144,26 @@ public final class Lib {
     /** sub_18011A170 */
     public static void popClip() { if (dl != null) dl.popClipRect(); }
 
-    /** sub_1800ABE50 via sub_18011AB50/AAF0: text size. */
+    /** sub_1800ABE50 via sub_18011AB50/AAF0: text size (width, line height) in canvas units. */
     public static float[] textSize(String s, int font) {
-        ImFont f = FONT[font];
-        ImGui.pushFont(f, BAKED[font]);
-        ImVec2 v = new ImVec2();
-        ImGui.calcTextSize(v, s);
-        ImGui.popFont();
-        float k = FONT_SIZE[font] / BAKED[font];
-        return new float[]{v.x * k, v.y * k};
+        MsdfFont f = font();
+        float w = f == null || s == null ? 0f : f.getTextWidth(s, FONT_SIZE[font]);
+        return new float[]{w, FONT_SIZE[font]};
     }
 
     /** sub_18011AC80 / ABF0: draw text with the original's drop shadow. */
     public static void text(String s, float x, float y, int font, float[] c) {
         if (dl == null || s == null || s.isEmpty()) return;
-        ImFont f = FONT[font];
-        float size = FONT_SIZE[font];
+        float size = FONT_SIZE[font] * scale;
         boolean groupA = font <= 1 || (font - 6) <= 3 && font >= 6;
         boolean groupB = (font >= 2 && font <= 5) || font == 10;
         float a = gAlpha * c[3];
+        int shadowAlpha = 0;
         if (a > 0.05f && (groupA || groupB)) {
-            int sa = (int) ((groupA ? 140f : 70f) * a);
-            float[] ps = pt(x + 1f, y + 1f);
-            if (sa != 0) dl.addText(f, (int) BAKED[font], ps[0], ps[1], sa << 24, s);
+            shadowAlpha = Math.min(255, (int) ((groupA ? 140f : 70f) * a));
         }
-        int cc = col(c);
-        float[] pp = pt(x, y);
-        if ((cc & 0xFF000000) != 0) dl.addText(f, (int) BAKED[font], pp[0], pp[1], cc, s);
+        float[] p = pt(x, y);
+        dl.addText(s, p[0], p[1], size, col(c), shadowAlpha);
     }
 
     /** sub_18011AF00: text inside a box, optionally centred. */
@@ -172,7 +190,6 @@ public final class Lib {
         text(ellipsize(s, font, maxW), x, y, font, c);
     }
     public static void textBoxEllipsis(String s, float x, float y, float w, float h, int font, float[] c, boolean hc, boolean vc) {
-        if (h <= 0f && false) return;
         if (w <= 0f) return;
         textBox(ellipsize(s, font, w), x, y, w, h, font, c, hc, vc);
     }
@@ -180,8 +197,8 @@ public final class Lib {
     /** sub_18011E040: AddImage(tex, min, max, uv(0,0)-(1,1), col). */
     public static void image(long tex, float x, float y, float w, float h, float[] c) {
         if (dl == null || tex == 0) return;
-        float[] a = pt(x, y), b = pt(x + w, y + h);
-        dl.addImage(tex, a[0], a[1], b[0], b[1], 0f, 0f, 1f, 1f, col(c));
+        float[] a = pt(x, y);
+        dl.addImage(tex, a[0], a[1], w * scale, h * scale, col(c));
     }
 
     /** sub_18011A770 (soft filled circle, AddCircleFilled with 48 segments via PathArcTo). */
@@ -189,6 +206,6 @@ public final class Lib {
         if (dl == null) return;
         int cc = col(c);
         float[] a = pt(cx, cy);
-        if ((cc & 0xFF000000) != 0 && r >= 0.5f) dl.addCircleFilled(a[0], a[1], r * scale, cc, 0);
+        dl.addCircleFilled(a[0], a[1], r * scale, cc, 0);
     }
 }

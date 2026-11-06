@@ -88,6 +88,13 @@ java {
 }
 
 jar {
+    // The ClickGUI resources (ui layout, settings, icons, fonts) live under src/main/resources/prestige_ui/ and are
+    // consumed at runtime as class resources via ClickGuiScreen.class.getResourceAsStream("/prestige_ui/…").
+    // processResources is the task that copies src/main/resources into build/resources/main; include its whole
+    // output so those resources ship in the mod jar, otherwise Bridge.bind() streams null and the screen opens
+    // with no pages.
+    from(sourceSets.main.resources)
+
     // Unpack the shaded libs (imgui classes + native dll, ClassTransform) into the mod jar.
     from({
         configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }

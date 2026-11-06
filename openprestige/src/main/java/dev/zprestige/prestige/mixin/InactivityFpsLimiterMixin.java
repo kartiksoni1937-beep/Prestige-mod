@@ -1,8 +1,11 @@
 package dev.zprestige.prestige.mixin;
 
-import org.spongepowered.asm.mixin.Mixin;
+import net.lenni0451.classtransform.annotations.CTransformer;
 
-/** Target class absent from Yarn 1.21+build.9; kept as an empty mixin so no hooks are installed. */
-@Mixin(targets = "")
+/**
+ * Target class absent from Yarn 1.21+build.9. Registered by name so the engine's target count stays intact; the
+ * transformer is empty, so nothing is injected even if a matching anchor ever applies.
+ */
+@CTransformer(value = {}, name = {"net.minecraft.client.option.InactivityFpsLimiter"})
 public abstract class InactivityFpsLimiterMixin {
 }

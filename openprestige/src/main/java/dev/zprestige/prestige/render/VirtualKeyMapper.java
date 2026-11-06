@@ -10,7 +10,9 @@ public class VirtualKeyMapper {
     }
 
     public static int toGlfwKey(int virtualKey) {
-        return !VK_TO_GLFW.containsKey(virtualKey) ? virtualKey : (Integer)VK_TO_GLFW.getOrDefault(virtualKey, virtualKey);
+        int result = !VK_TO_GLFW.containsKey(virtualKey) ? virtualKey : (Integer)VK_TO_GLFW.getOrDefault(virtualKey, virtualKey);
+        System.out.println("[DEBUG] VirtualKeyMapper.toGlfwKey in=" + virtualKey + " out=" + result);
+        return result;
     }
 
     static {

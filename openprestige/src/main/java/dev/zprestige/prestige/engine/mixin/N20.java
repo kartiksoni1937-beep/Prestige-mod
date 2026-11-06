@@ -1,8 +1,7 @@
 package dev.zprestige.prestige.engine.mixin;
 
-import net.lenni0451.classtransform.annotations.CTransformer;
+import org.spongepowered.asm.mixin.Mixin;
 
-/** Target class absent from Yarn 1.21+build.9; kept as an empty transformer so no hooks are installed. */
-@CTransformer({})
-public final class N20 {
-}
+/** Engine anchor for net.minecraft.client.render.SkyRendering: class absent in 1.21, anchor is a no-op. */
+@Mixin(targets = "net.minecraft.client.render.SkyRendering", remap = false, priority = 2000)
+public abstract class N20 {}

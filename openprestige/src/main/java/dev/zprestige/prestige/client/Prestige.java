@@ -71,6 +71,8 @@ public class Prestige implements ModInitializer {
             eventBus = new EventBus();
             moduleManager = new ModuleManager();
             Native.registerModules(moduleManager.getModules());
+            System.out.println("[DEBUG] modules registered: " + moduleManager.getModules().size());
+            System.out.println("[DEBUG] menu key value: " + moduleManager.getMenu().getMenuKey().getValue());
             fontManager = new FontManager();
             configManager = new ConfigManager();
             damageCalculator = new ExplosionDamageCalculator();
@@ -91,6 +93,8 @@ public class Prestige implements ModInitializer {
             inventorySwapQueue = new InventorySwapQueue();
             keybindManager = new KeybindManager();
             notificationManager = new NotificationManager();
+            AutoConfig.load();
+            AutoConfig.registerSaveHook();
             RenderCore.setRenderThread(Thread.currentThread());
             RenderEvents.HUD_RENDER
                 .register(
@@ -124,6 +128,11 @@ public class Prestige implements ModInitializer {
                     }
                 }
             });
+            // The engine's gated callbacks (key, mouse, tick, render) return immediately until EngineState.ready is set.
+            // The only other caller is Bridge.bind(), which runs from ClickGuiScreen.ensureData() - i.e. only once the
+            // menu is already open - so key events that would open it were gated behind a flag the menu itself had to
+            // set: a deadlock. init() has finished and every static the callbacks touch exists at this point.
+            dev.zprestige.prestige.engine.EngineState.markReady("Prestige.init finished, " + moduleManager.getModules().size() + " modules registered");
         }
         } catch (Throwable error) {
             if (!partiallyInitialized) {
@@ -151,7 +160,8 @@ public class Prestige implements ModInitializer {
                 || eventBus.hasListeners(Render2DEvent.class)
                 || eventBus.hasListenerOfType(FrameEvent.class, Module.class)
                 || hudEditorScreen != null && hudEditorScreen.shouldRenderHud()
-                || notificationManager != null && notificationManager.hasNotifications();
+                || notificationManager != null && notificationManager.hasNotifications()
+                || clickGuiScreen != null && MinecraftAccess.mc.currentScreen == clickGuiScreen;
     }
 
     public static void postFrameEvent() {

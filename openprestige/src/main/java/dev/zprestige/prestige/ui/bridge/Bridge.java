@@ -42,7 +42,7 @@ public final class Bridge {
             }
             manager = mgr;
             bound = !MODULES.isEmpty();
-            if (bound) dev.zprestige.prestige.engine.EngineState.markReady("bridge bound " + MODULES.size() + " modules");
+            if (bound) dev.zprestige.prestige.engine.EngineState.markReady("ClickGUI bridge bound " + MODULES.size() + " modules");
             String dump = System.getProperty("prestige.dump");   // dev: force class init of instrumented classes (DumpHook)
             if (dump != null) DumpHook.init(dump, prestige.getClassLoader());
             System.out.println("[prestige-ui] bridge " + (bound ? "bound: " + MODULES.size() + " modules" : "found no modules"));
@@ -77,6 +77,7 @@ public final class Bridge {
             }
         }
         System.out.println("[prestige-ui] bridge: built " + built.size() + " modules from manifest, failed " + fail);
+        if (fail > 0) System.err.println("[prestige-ui] bridge: " + fail + " module(s) could not be constructed; see the errors above");
         if (!built.isEmpty()) {
             for (Method m : mgr.getClass().getDeclaredMethods())
                 if (m.getName().equals("setModules") && m.getParameterCount() == 1 && m.getParameterTypes()[0] == List.class) {
