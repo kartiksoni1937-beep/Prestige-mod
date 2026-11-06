@@ -33,6 +33,14 @@ public final class Entry implements ClientModInitializer {
         String vendor = System.getProperty("java.vendor", "").toLowerCase();
         if (os.contains("android") || vendor.contains("android")) return true;
         try {
+            // PojavLauncher runs Minecraft on Android in a JVM backed by the Dalvik/ART runtime and exports its
+            // renderer settings into the environment, while os.name/java.vendor still say Linux/Oracle.
+            String vm = System.getProperty("java.vm.name", "").toLowerCase();
+            if (vm.contains("dalvik")) return true;
+            if (System.getenv("POJAV_RENDERER") != null) return true;
+        } catch (Throwable ignored) {
+        }
+        try {
             // Android JREs report a Linux VM but expose the Android runtime library.
             Class.forName("android.os.Build", false, Entry.class.getClassLoader());
             return true;

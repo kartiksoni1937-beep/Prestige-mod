@@ -46,7 +46,9 @@ public final class EngineState {
     public static void markReady(String why) {
         if (!ready) {
             ready = true;
-            System.out.println("[Engine] READY (" + why + ") targets transformed=" + transformed.size());
+            // Name the transformed targets: when a hook never fires, this list says whether its class was transformed at all.
+            System.out.println("[Engine] READY (" + why + ") targets transformed=" + transformed.size()
+                    + " " + new java.util.TreeSet<>(transformed));
         }
     }
 

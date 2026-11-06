@@ -126,6 +126,11 @@ public class Prestige implements ModInitializer {
                     }
                 }
             });
+            // The engine's gated callbacks (key, mouse, tick, render) return immediately until EngineState.ready is set.
+            // The only other caller is Bridge.bind(), which runs from ClickGuiScreen.ensureData() - i.e. only once the
+            // menu is already open - so key events that would open it were gated behind a flag the menu itself had to
+            // set: a deadlock. init() has finished and every static the callbacks touch exists at this point.
+            dev.zprestige.prestige.engine.EngineState.markReady("Prestige.init finished, " + moduleManager.getModules().size() + " modules registered");
         }
         } catch (Throwable error) {
             if (!partiallyInitialized) {
