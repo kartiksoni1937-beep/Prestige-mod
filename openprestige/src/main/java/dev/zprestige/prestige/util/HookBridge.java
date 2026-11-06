@@ -1325,4 +1325,18 @@ public class HookBridge {
     public static Rotation getTravelPostRotation(SilentRotationManager silentRotationManager) {
         return silentRotationManager.getActiveRotation();
     }
+
+    // Re-entrancy guard for EntityRendererMixin's label injection. It has to live here: ClassTransform only copies
+    // @CShadow fields that already exist on the target, so a transformer cannot add a new field to EntityRenderer
+    // (doing that is what threw NoSuchFieldError on join). Label rendering happens on the render thread only and the
+    // re-render nests inside the same call, so a plain static flag is enough.
+    private static boolean labelRenderingReentrant;
+
+    public static boolean isLabelRenderingReentrant() {
+        return labelRenderingReentrant;
+    }
+
+    public static void setLabelRenderingReentrant(boolean value) {
+        labelRenderingReentrant = value;
+    }
 }

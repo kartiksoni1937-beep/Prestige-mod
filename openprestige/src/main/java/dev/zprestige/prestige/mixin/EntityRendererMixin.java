@@ -28,8 +28,8 @@ import net.minecraft.util.math.BlockPos;
  */
 @CTransformer({EntityRenderer.class})
 public abstract class EntityRendererMixin<T extends Entity> {
-    // Guard state lives on the mixin instance, not as a field assumed to exist on EntityRenderer.
-    private boolean suppressLabelInjectionRecurse;
+    // No instance fields here. ClassTransform only wires up @CShadow fields that already exist on the target, so a
+    // transformer cannot introduce new state on EntityRenderer; the guard lives in HookBridge instead.
 
     @CInject(
         method = {"render"},
@@ -75,7 +75,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
         cancellable = true
     )
     public void modifyNameLabelAtRenderLabelIfPresentHead(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float tickDelta, InjectionCallback ci) {
-        if (Prestige.eventBus != null && text != null && !this.suppressLabelInjectionRecurse) {
+        if (Prestige.eventBus != null && text != null && !HookBridge.isLabelRenderingReentrant()) {
             boolean hasLabelText = HookBridge.hasLabelTextListeners(Prestige.eventBus, LabelTextEvent.class);
             boolean hasHealthIndicators = HookBridge.hasHealthIndicatorListeners(Prestige.eventBus, HealthIndicatorEvent.class);
             boolean hasRenderLabel = HookBridge.hasRenderLabelListeners(Prestige.eventBus, RenderLabelEvent.class);
@@ -106,11 +106,11 @@ public abstract class EntityRendererMixin<T extends Entity> {
                 }
 
                 if (displayName != null && !displayName.equals(originalDisplayName) && !displayName.getString().isEmpty()) {
-                    this.suppressLabelInjectionRecurse = true;
+                    HookBridge.setLabelRenderingReentrant(true);
                     try {
                         this.prestige$reRenderLabel(entity, displayName, matrices, vertexConsumers, light, tickDelta);
                     } finally {
-                        this.suppressLabelInjectionRecurse = false;
+                        HookBridge.setLabelRenderingReentrant(false);
                     }
                     ci.cancel();
                 }
