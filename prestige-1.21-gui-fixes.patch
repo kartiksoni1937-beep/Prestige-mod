@@ -1,0 +1,165 @@
+# Prestige 1.21 GUI Fixes Patch
+# Apply with: git apply prestige-1.21-gui-fixes.patch
+
+diff --git a/build.gradle b/build.gradle
+index xxxxxxx..yyyyyyy 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -51,14 +51,7 @@ dependencies {
+     // ClassTransform (net.lenni0451, customised build); engine/EnginePlugin uses it to apply the client's @CTransformer hooks.
+     shade files('libs/classtransform-bundled.jar')
+
+-    // imgui-java (binding + lwjgl3 backend + windows natives) — used by the legacy ClickGUI overlay.
+-    // The new ClickGUI renders through the client's own shader pipeline (dev.zprestige.prestige.ui.NativeDrawList)
+-    // and no longer depends on imgui-java. Keeping the dependency here only to satisfy existing shade rules.
+-    // TODO: remove once all imgui references are gone from the source tree.
+-    implementation "io.github.spair:imgui-java:1.92.7.1"
+-    implementation "io.github.spair:imgui-java-lwjgl3:1.92.7.1"
+-    runtimeOnly "org.lwjgl:lwjgl:3.3.3"
+-    runtimeOnly "org.lwjgl:lwjgl-glfw:3.3.3"
++    // The ClickGUI no longer uses imgui-java: its natives are desktop-only (Windows/Linux x86_64, macOS) and its GL3
++    // backend needs GLFW, neither of which exists in PojavLauncher on Android. The GUI now renders through the
++    // client's own shader pipeline (see dev.zprestige.prestige.ui.NativeDrawList).
+
+     // MSDF font atlas generator (compile-time only)
+     implementation "com.github.caciomc:msdfgen:1.0.0"
+
+diff --git a/gradle.properties b/gradle.properties
+index xxxxxxx..yyyyyyy 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -10,4 +10,3 @@ loader_version=0.20.1
+ fabric_version=0.102.0+1.21
+ # Mod
+ mod_version=0.1.0
+ maven_group=dev.prestige
+ archives_base_name=prestige
+-# imgui-java (binding + lwjgl3 backend + windows natives)
+-imgui_version=1.92.7.1
+
+diff --git a/src/main/java/dev/zprestige/prestige/client/Prestige.java b/src/main/java/dev/zprestige/prestige/client/Prestige.java
+index xxxxxxx..yyyyyyy 100644
+--- a/src/main/java/dev/zprestige/prestige/client/Prestige.java
++++ b/src/main/java/dev/zprestige/prestige/client/Prestige.java
+@@ -128,14 +128,14 @@ public class Prestige implements ModInitializer {
+         // initialises the module list.
+         Native.registerModules(this);
+
+-        // The engine's gated callbacks (key, mouse, tick, render) return immediately until
+-        // EngineState.markReady is called. If any initialisation step throws, we log it but
+-        // continue so the mod at least loads (the GUI key will be no-op until markReady).
+-        // TODO: make this fatal once the port is verified stable on 1.21.
+-        try {
+-            EngineState.markReady("Prestige.init finished, modules=" + ModuleManager.INSTANCE.getModules().size());
+-        } catch (Throwable t) {
+-            System.err.println("[Prestige] init failed: " + t);
+-        }
++        // The engine's gated callbacks (key, mouse, tick, render) return immediately until
++        // EngineState.markReady is called. Any failure here is fatal — without markReady the
++        // ClassTransform hooks (including the menu key) stay gated and the GUI won't open.
++        EngineState.markReady("Prestige.init finished, modules=" + ModuleManager.INSTANCE.getModules().size());
+     }
+
+     @Override
+
+diff --git a/src/main/java/dev/zprestige/prestige/ui/NativeDrawList.java b/src/main/java/dev/zprestige/prestige/ui/NativeDrawList.java
+index xxxxxxx..yyyyyyy 100644
+--- a/src/main/java/dev/zprestige/prestige/ui/NativeDrawList.java
++++ b/src/main/java/dev/zprestige/prestige/ui/NativeDrawList.java
+@@ -1,60 +1,32 @@
+ package dev.zprestige.prestige.ui;
+
+ import dev.zprestige.prestige.client.Prestige;
+ import dev.zprestige.prestige.render.CallbackDrawCommand;
+ import dev.zprestige.prestige.render.CoreShaders;
+ import dev.zprestige.prestige.render.DrawPipeline;
+ import dev.zprestige.prestige.render.DrawPipelines;
+ import dev.zprestige.prestige.render.GlTextureHandle;
+ import dev.zprestige.prestige.render.MsdfFont;
+-import dev.zprestige.prestige.render.RenderCore;
+ import dev.zprestige.prestige.render.RoundedOutlineShader;
+ import dev.zprestige.prestige.render.RoundedTextureShader;
+ import dev.zprestige.prestige.render.ShapeRenderer;
+ import dev.zprestige.prestige.type.BlendMode;
+ import dev.zprestige.prestige.type.GlPrimitive;
+ import dev.zprestige.prestige.world.MeshBuilder;
+ import java.awt.Color;
+-import java.nio.ByteBuffer;
+-import java.nio.FloatBuffer;
+-import java.nio.IntBuffer;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.atomic.AtomicLong;
+ import org.joml.Matrix4f;
+ import org.joml.Vector4f.
+-import org.lwjgl.opengl.GL11;
+-import org.lwjgl.opengl.GL15;
+-import org.lwjgl.opengl.GL20;
+-import org.lwjgl.opengl.GL30;
+-import static org.lwjgl.opengl.GL11.GL_FLOAT;
+-import static org.lwjgl.opengl.GL11.GL_INT;
+-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+-import static org.lwjgl.opengl.GL11.GL_TRIANGLE_FAN;
+-import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
+-import static org.lwjgl.opengl.GL11.GL_QUADS;
+-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
+-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+-import static org.lwjgl.opengl.GL11.GL_ONE;
+-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+
+ public final class NativeDrawList {
+     private static final AtomicLong NEXT_TEXTURE = new AtomicLong(1);
+
+-    private int legacyVao = -1;
+-    private int legacyVbo = -1;
+-    private int legacyIbo = -1;
+-    private boolean legacyBound;
+-
+-    private void ensureLegacyBuffers() {
+-        if (legacyBound && legacyVao >= 0 && legacyVbo >= 0 && legacyIbo >= 0) return;
+-        try {
+-            legacyVao = GL30.glGenVertexArrays();
+-            legacyVbo = GL15.glGenBuffers();
+-            legacyIbo = GL15.genBuffers();
+-            legacyBound = true;
+-        } catch (Throwable ignored) {
+-        }
+-    }
+-
+-    private void flushLegacy() {
+-        if (commands.isEmpty()) return.
+-        ensureLegacyBuffers().
+-        if (legacyVao < 0 || legacyVbo < 0 || legacyIbo < 0) { clear(); return; }
+-        // ... legacy GL drawing code removed ...
+-    }
+-
+     /** Replays every recorded primitive into the client's command queue, in order. */
+     public void flush(Matrix4f matrix) {
+         if (commands.isEmpty()) return.
+         try {
+-            if (CoreShaders.available()) {
++            if (!CoreShaders.available()) {
++                commands.clear();
++                return;
++            }
++            for (Command c : commands) {
++                try {
++                    emit(c, matrix);
++                } catch (Throwable firstFailure) {
++                    if (firstFailure instanceof NoClassDefFoundError || firstFailure instanceof ExceptionInInitializerError) {
++                        commands.clear();
++                        return;
++                    }
++                }
++            }
++        } finally {
++            clear();
++        }
++    }
++
++    // All legacy LWJGL drawing methods (drawRectLegacy, drawRoundedRectLegacy, drawTextLegacy, etc.) removed.
++    // The ClickGUI now exclusively uses the shader pipeline via emit()/DrawPipeline.
+ }
