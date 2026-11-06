@@ -71,6 +71,8 @@ public class Prestige implements ModInitializer {
             eventBus = new EventBus();
             moduleManager = new ModuleManager();
             Native.registerModules(moduleManager.getModules());
+            System.out.println("[DEBUG] modules registered: " + moduleManager.getModules().size());
+            System.out.println("[DEBUG] menu key value: " + moduleManager.getMenu().getMenuKey().getValue());
             fontManager = new FontManager();
             configManager = new ConfigManager();
             damageCalculator = new ExplosionDamageCalculator();

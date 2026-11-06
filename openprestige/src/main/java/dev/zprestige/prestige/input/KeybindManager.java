@@ -24,6 +24,7 @@ public class KeybindManager implements MinecraftAccess {
 
     @Subscribe
     public void onKey(KeyEvent event) {
+        System.out.println("[DEBUG] KeyEvent key=" + event.getKey() + " action=" + event.getAction());
         if (event.getAction() == 0) {
             if (event.getKey() == VirtualKeyMapper.toGlfwKey(Prestige.moduleManager.getMenu().getMenuKey().getValue())) {
                 if (mc.currentScreen instanceof dev.zprestige.prestige.gui.ClickGuiScreen) {
