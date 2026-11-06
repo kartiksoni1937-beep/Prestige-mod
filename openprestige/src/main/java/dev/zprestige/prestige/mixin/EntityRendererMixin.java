@@ -28,7 +28,8 @@ import net.minecraft.util.math.BlockPos;
  */
 @CTransformer({EntityRenderer.class})
 public abstract class EntityRendererMixin<T extends Entity> {
-    private boolean prestige$relabeling;
+    // Guard state lives on the mixin instance, not as a field assumed to exist on EntityRenderer.
+    private boolean suppressLabelInjectionRecurse;
 
     @CInject(
         method = {"render"},
@@ -74,7 +75,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
         cancellable = true
     )
     public void modifyNameLabelAtRenderLabelIfPresentHead(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float tickDelta, InjectionCallback ci) {
-        if (Prestige.eventBus != null && text != null && !this.prestige$relabeling) {
+        if (Prestige.eventBus != null && text != null && !this.suppressLabelInjectionRecurse) {
             boolean hasLabelText = HookBridge.hasLabelTextListeners(Prestige.eventBus, LabelTextEvent.class);
             boolean hasHealthIndicators = HookBridge.hasHealthIndicatorListeners(Prestige.eventBus, HealthIndicatorEvent.class);
             boolean hasRenderLabel = HookBridge.hasRenderLabelListeners(Prestige.eventBus, RenderLabelEvent.class);
@@ -105,7 +106,12 @@ public abstract class EntityRendererMixin<T extends Entity> {
                 }
 
                 if (displayName != null && !displayName.equals(originalDisplayName) && !displayName.getString().isEmpty()) {
-                    this.prestige$reRenderLabel(entity, displayName, matrices, vertexConsumers, light, tickDelta);
+                    this.suppressLabelInjectionRecurse = true;
+                    try {
+                        this.prestige$reRenderLabel(entity, displayName, matrices, vertexConsumers, light, tickDelta);
+                    } finally {
+                        this.suppressLabelInjectionRecurse = false;
+                    }
                     ci.cancel();
                 }
             }
@@ -119,12 +125,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
                 "renderLabelIfPresent", Entity.class, Text.class, MatrixStack.class, VertexConsumerProvider.class, int.class, float.class
             );
             method.setAccessible(true);
-            this.prestige$relabeling = true;
-            try {
-                method.invoke(this, entity, displayName, matrices, vertexConsumers, light, tickDelta);
-            } finally {
-                this.prestige$relabeling = false;
-            }
+            method.invoke(this, entity, displayName, matrices, vertexConsumers, light, tickDelta);
         } catch (Throwable ignored) {
         }
     }
