@@ -51,15 +51,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Dear ImGui. The binding contains the Java classes, lwjgl3 the GL3/GLFW backend and
-    // natives-* the imgui-java64 libraries (extracted from the jar at runtime by imgui-java).
-    // Linux natives are x86_64 only; the macOS dylib is universal (x86_64 + arm64).
-    shade "io.github.spair:imgui-java-binding:${project.imgui_version}"
-    // imgui-java-lwjgl3 pulls LWJGL 3.4.1 transitively, which replaces Minecraft's 3.3.3 jars and breaks world saving
-    shade("io.github.spair:imgui-java-lwjgl3:${project.imgui_version}") { exclude group: 'org.lwjgl' }
-    shade "io.github.spair:imgui-java-natives-windows:${project.imgui_version}"
-    shade "io.github.spair:imgui-java-natives-linux:${project.imgui_version}"
-    shade "io.github.spair:imgui-java-natives-macos:${project.imgui_version}"
+    // Dear ImGui is gone: the ClickGUI renders through the client's own command queue (ui/NativeDrawList), so the
+    // desktop-only imgui-java bindings, GLFW backend and native libraries are no longer dependencies. They also pulled
+    // LWJGL 3.4.1, which conflicts with the 3.3.3 that Minecraft itself uses.
+
 
     // ClassTransform (net.lenni0451, customised build); engine/EnginePlugin uses it to apply the client's @CTransformer hooks.
     shade files('libs/classtransform-bundled.jar')
@@ -95,7 +90,7 @@ jar {
     // with no pages.
     from(sourceSets.main.resources)
 
-    // Unpack the shaded libs (imgui classes + native dll, ClassTransform) into the mod jar.
+    // Unpack the shaded libs (ClassTransform) into the mod jar.
     from({
         configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
     }) {
