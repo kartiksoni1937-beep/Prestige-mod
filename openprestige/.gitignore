@@ -19,3 +19,7 @@ openvape.zip
 /dist/
 /injector/target/
 /tools
+
+# the latest runnable jar is kept in the source tree on purpose
+!src/build/
+!src/build/**
