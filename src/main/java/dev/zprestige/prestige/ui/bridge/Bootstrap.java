@@ -1,5 +1,6 @@
 package dev.zprestige.prestige.ui.bridge;
 
+import dev.zprestige.prestige.util.Log;
 import com.google.gson.Gson;
 import java.awt.Color;
 import java.io.InputStream;
@@ -39,10 +40,10 @@ public final class Bootstrap {
             Manifest m = new Gson().fromJson(new String(in.readAllBytes(), StandardCharsets.UTF_8), Manifest.class);
             if (m != null && m.modules != null)
                 for (Mod x : m.modules) mods.put(x.clazz, x);
-            if (mods.isEmpty()) System.err.println("[Prestige] module manifest is empty; no module will be registered");
+            if (mods.isEmpty()) Log.error("[Prestige] module manifest is empty; no module will be registered");
         } catch (Throwable error) {
-            System.err.println("[Prestige] could not read prestige_ui/manifest_live.json: " + error);
-            error.printStackTrace(System.err);
+            Log.error("[Prestige] could not read prestige_ui/manifest_live.json: " + error);
+            Log.exception(error);
         }
         return mods;
     }
@@ -96,7 +97,7 @@ public final class Bootstrap {
 
     private static void report(Class<?> type, String message) {
         String key = type.getName() + "|" + message;
-        if (REPORTED.add(key)) System.err.println("[Prestige] " + type.getSimpleName() + ": " + message);
+        if (REPORTED.add(key)) Log.error("[Prestige] " + type.getSimpleName() + ": " + message);
     }
 
     /** Post-construction pass: metadata + settings list completeness. */

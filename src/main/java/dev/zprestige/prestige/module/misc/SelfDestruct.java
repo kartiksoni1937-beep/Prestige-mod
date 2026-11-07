@@ -6,6 +6,7 @@ import dev.zprestige.prestige.inject.Bootstrap;
 import dev.zprestige.prestige.inject.NativeBridge;
 import dev.zprestige.prestige.ui.Input;
 import dev.zprestige.prestige.gui.ClickGuiScreen;
+import dev.zprestige.prestige.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class SelfDestruct extends Module {
                     module.toggle();
                 }
             } catch (Throwable error) {
-                error.printStackTrace();
+                Log.exception(error);
             }
         }
 
@@ -53,7 +54,7 @@ public class SelfDestruct extends Module {
                 module.dispose();
                 module.getKeybind().setValue(-1);
             } catch (Throwable error) {
-                error.printStackTrace();
+                Log.exception(error);
             }
         }
         Prestige.moduleManager.setModules(new ArrayList<>());
@@ -72,7 +73,7 @@ public class SelfDestruct extends Module {
             // loader already gone
         } catch (Throwable error) {
             // an Error escaping a main-thread task would take the whole game down
-            error.printStackTrace();
+            Log.exception(error);
         }
     }
 

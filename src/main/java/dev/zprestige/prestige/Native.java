@@ -4,6 +4,7 @@ import dev.zprestige.prestige.annotation.NativeId;
 import dev.zprestige.prestige.client.Prestige;
 import dev.zprestige.prestige.gui.ClickGuiScreen;
 import dev.zprestige.prestige.ui.bridge.Bootstrap;
+import dev.zprestige.prestige.util.Log;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class Native {
     @NativeId("f29b5f2e-3df2-4db8-bb6e-1c01a5f91f12")
     public static void registerModules(List modules) {
         if (modules == null) {
-            System.err.println("[Prestige] Native.registerModules called without a module list; no modules registered");
+            Log.error("[Prestige] Native.registerModules called without a module list; no modules registered");
             return;
         }
         Set<String> present = new HashSet<>();
@@ -64,7 +65,7 @@ public class Native {
                 Object module = constructor.newInstance();
                 if (!(module instanceof Module)) {
                     failed++;
-                    System.err.println("[Prestige] module class is not a Module: " + mod.clazz);
+                    Log.error("[Prestige] module class is not a Module: " + mod.clazz);
                     continue;
                 }
                 Bootstrap.post(module);
@@ -76,11 +77,11 @@ public class Native {
                 failed++;
                 Throwable cause = error instanceof java.lang.reflect.InvocationTargetException && error.getCause() != null
                         ? error.getCause() : error;
-                System.err.println("[Prestige] module registration failed for " + mod.clazz + " (" + mod.name + "): " + cause);
-                if (failed <= 5) cause.printStackTrace(System.err);
+                Log.error("[Prestige] module registration failed for " + mod.clazz + " (" + mod.name + "): " + cause);
+                if (failed <= 5) Log.exception(cause);
             }
         }
-        System.out.println("[Prestige] modules registered=" + registered + " skipped=" + skipped + " failed=" + failed
+        Log.info("[Prestige] modules registered=" + registered + " skipped=" + skipped + " failed=" + failed
                 + " total=" + modules.size() + " manifest=" + Bootstrap.mods().size());
     }
 
@@ -118,7 +119,7 @@ public class Native {
     private static void legacy(String method) {
         if (!modeWarningLogged) {
             modeWarningLogged = true;
-            System.out.println("[Prestige] legacy native hook " + method + "() invoked; running standalone without prestige_native.dll (no-op)");
+            Log.info("[Prestige] legacy native hook " + method + "() invoked; running standalone without prestige_native.dll (no-op)");
         }
     }
 

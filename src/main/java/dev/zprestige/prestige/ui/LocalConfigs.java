@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import dev.zprestige.prestige.client.Prestige;
+import dev.zprestige.prestige.util.Log;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -93,10 +94,10 @@ public final class LocalConfigs {
                         if (e.author == null) e.author = "";
                         if (e.date == null) e.date = "";
                         ALL.add(e);
-                    } catch (Throwable t) { System.out.println("[prestige-ui] config " + p.getFileName() + ": " + t); }
+                    } catch (Throwable t) { Log.info("[prestige-ui] config " + p.getFileName() + ": " + t); }
                 }
             }
-        } catch (IOException e) { System.out.println("[prestige-ui] configs dir: " + e); }
+        } catch (IOException e) { Log.info("[prestige-ui] configs dir: " + e); }
         ALL.sort(Comparator.comparingInt((Entry e) -> e.id).reversed());
         rebuild();
     }
@@ -109,7 +110,7 @@ public final class LocalConfigs {
             // an id only ever has one file (the name part can change)
             deleteFiles(e.id);
             Files.writeString(file(e), GSON.toJson(e), StandardCharsets.UTF_8);
-        } catch (IOException ex) { System.out.println("[prestige-ui] config save: " + ex); WidgetsPage.toast("Could not save config"); }
+        } catch (IOException ex) { Log.info("[prestige-ui] config save: " + ex); WidgetsPage.toast("Could not save config"); }
     }
 
     private static void deleteFiles(int id) {
@@ -156,7 +157,7 @@ public final class LocalConfigs {
 
     private static String snapshot() {
         if (Prestige.configManager == null) return null;
-        try { return Prestige.configManager.saveToJson(); } catch (Throwable t) { System.out.println("[prestige-ui] snapshot: " + t); return null; }
+        try { return Prestige.configManager.saveToJson(); } catch (Throwable t) { Log.info("[prestige-ui] snapshot: " + t); return null; }
     }
 
     static void create() {
@@ -179,7 +180,7 @@ public final class LocalConfigs {
         e.visibility = CreateConfigPage.visibility;
         for (int i = 0; i < CreateConfigPage.TAGS.length; i++) if (CreateConfigPage.tagSel[i]) e.tags.add(CreateConfigPage.TAGS[i]);
         try { e.data = GSON.fromJson(snap, JsonObject.class); }
-        catch (RuntimeException ex) { System.out.println("[prestige-ui] config snapshot: " + ex); WidgetsPage.toast("Could not create config"); return; }
+        catch (RuntimeException ex) { Log.info("[prestige-ui] config snapshot: " + ex); WidgetsPage.toast("Could not create config"); return; }
         write(e);
         ALL.add(0, e);
         CreateConfigPage.name.setLength(0);
@@ -203,10 +204,10 @@ public final class LocalConfigs {
             c.downloads = e.downloads;
             write(e);
             // b() is the client's load summary ("<applied>|<warnings>|<errors>")
-            System.out.println("[prestige-ui] config '" + e.name + "' loaded " + report);
+            Log.info("[prestige-ui] config '" + e.name + "' loaded " + report);
             WidgetsPage.toast("Loaded " + e.name);
         } catch (Throwable t) {
-            System.out.println("[prestige-ui] config load: " + t);
+            Log.info("[prestige-ui] config load: " + t);
             WidgetsPage.toast("Failed to load config");
         }
     }
@@ -216,7 +217,7 @@ public final class LocalConfigs {
         String snap = snapshot();
         if (e == null || snap == null) { WidgetsPage.toast("Could not update config"); return; }
         try { e.data = GSON.fromJson(snap, JsonObject.class); }
-        catch (RuntimeException ex) { System.out.println("[prestige-ui] config snapshot: " + ex); WidgetsPage.toast("Could not update config"); return; }
+        catch (RuntimeException ex) { Log.info("[prestige-ui] config snapshot: " + ex); WidgetsPage.toast("Could not update config"); return; }
         e.date = LocalDate.now().toString();
         write(e);
         rebuild();

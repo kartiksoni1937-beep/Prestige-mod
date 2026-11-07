@@ -1,5 +1,6 @@
 package dev.zprestige.prestige.reflect;
 
+import dev.zprestige.prestige.util.Log;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.invoke.MethodHandles.Lookup;
@@ -285,7 +286,7 @@ public abstract class ReflectionBase {
             theUnsafeField.setAccessible(true);
             unsafeInstance = (Unsafe)theUnsafeField.get(null);
         } catch (Throwable error) {
-            error.printStackTrace(System.err);
+            Log.exception(error);
         }
 
         UNSAFE = unsafeInstance;

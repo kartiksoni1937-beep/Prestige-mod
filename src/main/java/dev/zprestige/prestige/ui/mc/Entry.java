@@ -1,6 +1,7 @@
 package dev.zprestige.prestige.ui.mc;
 
 import dev.zprestige.prestige.client.Prestige;
+import dev.zprestige.prestige.util.Log;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -16,13 +17,13 @@ public final class Entry implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         boolean android = isAndroid();
-        System.out.println("[prestige-ui] native ClickGUI ready (menu key opens it; platform=" + (android ? "android" : "desktop") + ")");
+        Log.info("[prestige-ui] native ClickGUI ready (menu key opens it; platform=" + (android ? "android" : "desktop") + ")");
         if (!android) {
             // Desktop-only cosmetic splash window (Swing/AWT). It cannot exist on Android, where the JRE has no AWT peers.
             try {
                 Skid.run();
             } catch (Throwable t) {
-                System.out.println("[prestige-ui] splash unavailable: " + t);
+                Log.info("[prestige-ui] splash unavailable: " + t);
             }
         }
     }
@@ -44,7 +45,7 @@ public final class Entry implements ClientModInitializer {
     static {
         // Touch the client class early so Fabric reports a clear error if Prestige failed to load.
         if (FabricLoader.getInstance().isModLoaded("prestige") && Prestige.moduleManager == null) {
-            System.out.println("[prestige-ui] warning: Prestige has no module manager yet; the menu will retry once it initialises");
+            Log.info("[prestige-ui] warning: Prestige has no module manager yet; the menu will retry once it initialises");
         }
     }
 }

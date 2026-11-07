@@ -1,6 +1,7 @@
 package dev.zprestige.prestige;
 
 import dev.zprestige.prestige.event.Event;
+import dev.zprestige.prestige.util.Log;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -162,8 +163,8 @@ public class EventBus {
     private static void logListenerFailure(ListenerEntry entry, Throwable error) {
         String listenerName = entry.getTarget().getClass().getName() + "#" + entry.getMethod().getName();
         if (LOGGED_FAILURES.add(listenerName + ":" + error.getClass().getName())) {
-            System.err.println(LISTENER_ERROR_PREFIX + listenerName);
-            error.printStackTrace();
+            Log.error(LISTENER_ERROR_PREFIX + listenerName);
+            Log.exception(error);
         }
     }
 

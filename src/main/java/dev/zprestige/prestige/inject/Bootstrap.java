@@ -5,6 +5,7 @@ import dev.zprestige.prestige.engine.EnginePlugin;
 import dev.zprestige.prestige.engine.EngineState;
 import dev.zprestige.prestige.hooks.Definer;
 import dev.zprestige.prestige.ui.mc.Entry;
+import dev.zprestige.prestige.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public final class Bootstrap {
             MinecraftClient.getInstance().execute(Bootstrap::initClient);
         } catch (Throwable t) {
             log("injection bootstrap failed; the game keeps running without Prestige hooks: " + t);
-            t.printStackTrace(System.out);
+            Log.exception(t);
             // Injection is a fallback for launchers that do not load Fabric mods; Fabric users get a clear error from
             // Prestige.init instead. Never rethrow here: this runs on the native loader's worker thread.
         }
@@ -217,7 +218,7 @@ public final class Bootstrap {
     private static void fail(Report report, String target, Throwable t) {
         report.failed.add(target);
         log("hook failed for " + target + ": " + t);
-        t.printStackTrace(System.out);
+        Log.exception(t);
     }
 
     /** True when this client was injected, i.e. hooks were applied through JVMTI and can be taken out again. */
@@ -252,16 +253,16 @@ public final class Bootstrap {
             log("client initialised");
         } catch (Throwable t) {
             log("client init failed: " + t);
-            t.printStackTrace(System.out);
+            Log.exception(t);
         }
     }
 
     private static void log(String message) {
-        System.out.println("[Prestige-Inject] " + message);
+        Log.info("[Prestige-Inject] " + message);
         try {
             NativeBridge.log(message);
         } catch (UnsatisfiedLinkError ignored) {
-            // not injected (dev run): the console line above is enough
+            // not injected (dev run): nothing to report to the loader
         }
     }
 }

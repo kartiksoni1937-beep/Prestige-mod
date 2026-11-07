@@ -1,5 +1,6 @@
 package dev.zprestige.prestige.render;
 
+import dev.zprestige.prestige.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +25,7 @@ public class ShaderCompiler {
         GL20.glLinkProgram(program);
         if (GL20.glGetProgrami(program, 35714) == 0) {
             String linkLog = GL20.glGetProgramInfoLog(program);
-            System.err.println(linkLog);
+            Log.error(linkLog);
             GL20.glDeleteProgram(program);
             GL20.glDeleteShader(vertexShader);
             GL20.glDeleteShader(fragmentShader);
@@ -56,7 +57,7 @@ public class ShaderCompiler {
             GL20.glCompileShader(shader);
             if (GL20.glGetShaderi(shader, 35713) == 0) {
                 String compileLog = GL20.glGetShaderInfoLog(shader);
-                System.err.println(compileLog);
+                Log.error(compileLog);
                 GL20.glDeleteShader(shader);
                 throw new RuntimeException("Shader compile failed for " + path + ". See logs above for error");
             } else {

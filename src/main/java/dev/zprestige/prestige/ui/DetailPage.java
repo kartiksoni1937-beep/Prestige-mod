@@ -2,6 +2,7 @@ package dev.zprestige.prestige.ui;
 
 import static dev.zprestige.prestige.ui.Lib.*;
 
+import dev.zprestige.prestige.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -97,7 +98,7 @@ public final class DetailPage {
                     fillRect(x + 14f, ((53f - v66 * 48f) * 0.5f) + y, 2f, v66 * 48f, 0f, new float[]{a[0], a[1], a[2], v66 * 0.45f});
                 }
             }
-            if (Boolean.getBoolean("debugRows")) System.out.println("row " + s.name + " y=" + (y + Lib.oy) + " type=" + s.type);
+            if (Boolean.getBoolean("debugRows")) Log.info("row " + s.name + " y=" + (y + Lib.oy) + " type=" + s.type);
             row(s, x, y, pw, rowHot);
             if (i != vis.size() - 1) fillRect(x + 20f, (y + 54f) - 1f, pw - 40f, 1f, 0f, new float[]{0f, 0f, 0f, 0.35f});
             y += 54f;

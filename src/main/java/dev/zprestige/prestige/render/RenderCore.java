@@ -2,6 +2,7 @@ package dev.zprestige.prestige.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.zprestige.prestige.data.CameraMatrices;
+import dev.zprestige.prestige.util.Log;
 import java.lang.ref.Cleaner;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +17,8 @@ import net.minecraft.client.gl.GlBackend;
 import net.minecraft.client.texture.GlTexture;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RenderCore {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RenderCore.class);
     public static final Cleaner CLEANER = Cleaner.create();
     public static final BufferSource BUFFER_SOURCE = new BufferSource();
     private static final List TASK_QUEUE = new ArrayList();
@@ -79,7 +77,7 @@ public class RenderCore {
             try {
                 task.run();
             } catch (Throwable throwable) {
-                LOGGER.error("Render thread task failed", throwable);
+                Log.error("Render thread task failed", throwable);
             }
         }
     }
@@ -92,7 +90,7 @@ public class RenderCore {
             ((RenderCallback)RenderEvents.WORLD_RENDER.invoker()).onRender(BUFFER_SOURCE, context);
             BUFFER_SOURCE.flush(context);
         } catch (Throwable throwable) {
-            LOGGER.error("World render failed", throwable);
+            Log.error("World render failed", throwable);
         }
     }
 
@@ -107,7 +105,7 @@ public class RenderCore {
                 ((RenderCallback)RenderEvents.AFTER_HUD_RENDER.invoker()).onRender(BUFFER_SOURCE, context);
                 BUFFER_SOURCE.flush(context);
             } catch (Throwable throwable) {
-                LOGGER.error("HUD render failed", throwable);
+                Log.error("HUD render failed", throwable);
             }
         }
     }

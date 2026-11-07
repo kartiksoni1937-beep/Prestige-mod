@@ -33,6 +33,7 @@ import dev.zprestige.prestige.social.FriendManager;
 import dev.zprestige.prestige.util.SimulatedClickManager;
 import dev.zprestige.prestige.util.FrameDeltaTimer;
 import dev.zprestige.prestige.util.NotificationManager;
+import dev.zprestige.prestige.util.Log;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
@@ -136,15 +137,15 @@ public class Prestige implements ModInitializer {
             }
 
             // Report a usable diagnostic instead of a bare stack trace; Fabric will attach it to the crash report.
-            System.err.println("[Prestige] client initialisation failed" + (partiallyInitialized ? " after the module list was built" : " before any module was created") + ": " + error);
-            error.printStackTrace(System.err);
+            Log.error("[Prestige] client initialisation failed" + (partiallyInitialized ? " after the module list was built" : " before any module was created") + ": " + error);
+            Log.exception(error);
             throw new IllegalStateException("OpenPrestige failed to initialise", error);
         }
     }
 
     public static void logRenderError(Throwable error) {
         if (renderErrorCount.getAndIncrement() < 5) {
-            error.printStackTrace();
+            Log.exception(error);
         }
     }
 

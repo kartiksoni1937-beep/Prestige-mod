@@ -28,10 +28,7 @@ public final class EngineState {
     public static void onCallback(String name) {
         LongAdder a = callbacks.get(name);
         if (a == null) {
-            a = callbacks.computeIfAbsent(name, k -> {
-                System.out.println("[Engine] FIRST_CALLBACK=" + k);
-                return new LongAdder();
-            });
+            a = callbacks.computeIfAbsent(name, k -> new LongAdder());
         }
         a.increment();
     }
@@ -46,7 +43,6 @@ public final class EngineState {
     public static void markReady(String why) {
         if (!ready) {
             ready = true;
-            System.out.println("[Engine] READY (" + why + ") targets transformed=" + transformed.size());
         }
     }
 

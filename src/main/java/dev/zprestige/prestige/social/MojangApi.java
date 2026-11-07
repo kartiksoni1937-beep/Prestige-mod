@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import dev.zprestige.prestige.util.Log;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -30,7 +31,7 @@ public class MojangApi {
                 return uuid;
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
+            Log.exception(exception);
             return null;
         }
     }
@@ -64,7 +65,7 @@ public class MojangApi {
                 return profile;
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
+            Log.exception(exception);
             return null;
         }
     }

@@ -9,6 +9,7 @@ import dev.zprestige.prestige.event.MouseButtonEvent;
 import dev.zprestige.prestige.event.FrameEvent;
 import dev.zprestige.prestige.render.MinecraftAccess;
 import dev.zprestige.prestige.render.VirtualKeyMapper;
+import dev.zprestige.prestige.util.Log;
 import java.util.Map;
 
 public class KeybindManager implements MinecraftAccess {
@@ -57,7 +58,7 @@ public class KeybindManager implements MinecraftAccess {
                     module.toggle();
                 }
             } catch (Throwable error) {
-                error.printStackTrace();
+                Log.exception(error);
             }
         }
     }
@@ -100,7 +101,7 @@ public class KeybindManager implements MinecraftAccess {
                         }
                     }
                 } catch (Throwable error) {
-                    error.printStackTrace();
+                    Log.exception(error);
                 }
             }
         }

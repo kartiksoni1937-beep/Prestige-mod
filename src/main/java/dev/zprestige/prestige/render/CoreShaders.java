@@ -1,5 +1,7 @@
 package dev.zprestige.prestige.render;
 
+import dev.zprestige.prestige.util.Log;
+
 /**
  * Core 2D shader programs.
  *
@@ -25,7 +27,7 @@ public class CoreShaders {
         AVAILABLE = POS_COLOR != null && POS_COLOR_TEX != null && ROUNDED_RECT != null
                 && GAUSSIAN_BLUR != null && MSDF_TEXT != null;
         if (!AVAILABLE) {
-            System.err.println("[Prestige] one or more 2D shaders could not be compiled on this GL implementation; "
+            Log.error("[Prestige] one or more 2D shaders could not be compiled on this GL implementation; "
                     + "HUD and ClickGUI rendering are disabled for this session (gameplay is unaffected)");
         }
     }
@@ -34,7 +36,7 @@ public class CoreShaders {
         try {
             return ShaderCompiler.loadProgram(vertex, fragment, false);
         } catch (Throwable error) {
-            System.err.println("[Prestige] shader program unavailable (" + vertex + " + " + fragment + "): " + error);
+            Log.error("[Prestige] shader program unavailable (" + vertex + " + " + fragment + "): " + error);
             return null;
         }
     }
