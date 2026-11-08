@@ -37,6 +37,8 @@ public final class ClientVerifier {
         verifyEngineTransformers();
         verifyMeshBuilderContract();
         verifyGuiFrames();
+        verifyFriendsRegistry();
+        verifySocialsList();
         System.out.println(failures == 0 ? "RESULT: PASS" : "RESULT: FAIL (" + failures + " problem(s))");
         if (failures != 0) System.exit(1);
     }
@@ -204,6 +206,113 @@ public final class ClientVerifier {
             fail("ClickGUI layout failed: " + error);
             error.printStackTrace(System.out);
         }
+    }
+
+    /**
+     * Exercises the friends registry without a game: add/remove, duplicate adds, persistence across a restart,
+     * a username change on the same UUID, removal by stale name, and name-only (offline) entries.
+     */
+    private static void verifyFriendsRegistry() {
+        try {
+            java.nio.file.Path store = java.nio.file.Files.createTempDirectory("prestige-friends")
+                    .resolve("friends.json");
+            dev.zprestige.prestige.social.FriendManager.setStoreFile(store);
+
+            java.util.UUID alice = java.util.UUID.nameUUIDFromBytes("alice".getBytes(StandardCharsets.UTF_8));
+            java.util.UUID bob = java.util.UUID.nameUUIDFromBytes("bob".getBytes(StandardCharsets.UTF_8));
+
+            dev.zprestige.prestige.social.FriendManager fm = new dev.zprestige.prestige.social.FriendManager();
+            check(!fm.hasFriend(alice), "fresh registry must start empty");
+            fm.addFriend(alice, "Alice");
+            fm.addFriend(alice, "Alice");
+            fm.addFriend(bob, "Bob");
+            check(fm.getFriendCount() == 2, "duplicate add must not create a second entry");
+            check(fm.hasFriend(alice) && fm.hasFriend("Alice"), "friend lookup by UUID and by name");
+            check(fm.isFriend(alice), "protection defaults to on");
+
+            // A new instance must read the saved file back: persistence across a restart.
+            dev.zprestige.prestige.social.FriendManager restarted = new dev.zprestige.prestige.social.FriendManager();
+            check(restarted.hasFriend(alice) && restarted.hasFriend(bob), "friends must survive a restart");
+            check(restarted.getFriends().contains("Alice"), "stored username must be restored");
+
+            // Same UUID, new name: still the same friend, old name no longer matches.
+            restarted.addFriend(alice, "Alice_New");
+            check(restarted.hasFriend("Alice_New") && !restarted.hasFriend("Alice"),
+                    "a username change must keep the friendship and drop the old name");
+            restarted.removeFriend(alice);
+            check(!restarted.hasFriend(alice), "removeFriend(UUID) must remove the entry");
+
+            restarted.addFriend(alice, "Alice2");
+            restarted.removeFriend("Alice2");
+            check(!restarted.hasFriend(alice), "removeFriend(name) must resolve the UUID");
+
+            restarted.addFriend("Ghost");
+            check(restarted.hasFriend("Ghost"), "a friend with no known UUID must still be stored");
+            check(restarted.getFriendCount() == 2, "registry holds bob plus the name-only entry");
+
+            System.out.println("friends: add/remove/duplicate/persist/rename/offline = ok");
+        } catch (Throwable error) {
+            fail("friends registry checks failed: " + error);
+            error.printStackTrace(System.out);
+        } finally {
+            dev.zprestige.prestige.social.FriendManager.setStoreFile(null);
+        }
+    }
+
+    /**
+     * Socials page list mechanics without a window: the search filter drives the same list that is drawn, clicked and
+     * scrolled, and scrolling clamps to the filtered height (which is what decides whether the slider appears).
+     */
+    private static void verifySocialsList() {
+        try {
+            dev.zprestige.prestige.ui.SocialsPage.friends.clear();
+            dev.zprestige.prestige.ui.SocialsPage.players.clear();
+            for (int i = 0; i < 40; i++) {
+                dev.zprestige.prestige.ui.SocialsPage.friends.add(String.format("Friend%02d", i));
+            }
+            dev.zprestige.prestige.ui.SocialsPage.tab = 1;
+            dev.zprestige.prestige.ui.SocialsPage.search = "";
+            dev.zprestige.prestige.ui.SocialsPage.scrollTarget = 0f;
+            dev.zprestige.prestige.ui.SocialsPage.scrollA = 0f;
+            dev.zprestige.prestige.ui.SocialsPage.dirty = true;
+            check(dev.zprestige.prestige.ui.SocialsPage.visibleEntries().size() == 40, "unfiltered list must show both tabs");
+
+            // 20 rows of 70px minus the 10px tail, minus one viewport: the range the slider maps onto.
+            dev.zprestige.prestige.ui.SocialsPage.scroll(-100000);
+            check(Math.abs(dev.zprestige.prestige.ui.SocialsPage.scrollTarget - 860f) < 0.01f,
+                    "scroll must clamp to the list height (got " + dev.zprestige.prestige.ui.SocialsPage.scrollTarget + ")");
+            dev.zprestige.prestige.ui.SocialsPage.scroll(100000);
+            check(dev.zprestige.prestige.ui.SocialsPage.scrollTarget == 0f, "scroll must clamp at the top");
+
+            dev.zprestige.prestige.ui.SocialsPage.search = "1";
+            dev.zprestige.prestige.ui.SocialsPage.dirty = true;
+            int expected = 0;
+            for (int i = 0; i < 40; i++) {
+                if (String.format("Friend%02d", i).contains("1")) expected++;
+            }
+            check(dev.zprestige.prestige.ui.SocialsPage.visibleEntries().size() == expected,
+                    "search must filter the list (expected " + expected + ")");
+            dev.zprestige.prestige.ui.SocialsPage.scroll(-100000);
+            check(dev.zprestige.prestige.ui.SocialsPage.scrollTarget == 0f,
+                    "a filtered list that fits must not scroll, so no slider is drawn");
+
+            System.out.println("socials: filter/clamp/slider = ok");
+        } catch (Throwable error) {
+            fail("socials list checks failed: " + error);
+            error.printStackTrace(System.out);
+        } finally {
+            dev.zprestige.prestige.ui.SocialsPage.friends.clear();
+            dev.zprestige.prestige.ui.SocialsPage.players.clear();
+            dev.zprestige.prestige.ui.SocialsPage.search = "";
+            dev.zprestige.prestige.ui.SocialsPage.tab = 0;
+            dev.zprestige.prestige.ui.SocialsPage.scrollTarget = 0f;
+            dev.zprestige.prestige.ui.SocialsPage.scrollA = 0f;
+            dev.zprestige.prestige.ui.SocialsPage.dirty = true;
+        }
+    }
+
+    private static void check(boolean condition, String message) {
+        if (!condition) fail(message);
     }
 
     private static void fail(String message) {

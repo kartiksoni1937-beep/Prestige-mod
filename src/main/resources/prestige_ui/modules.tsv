@@ -13,6 +13,8 @@ Combat	Anti Web	Escapes cobwebs automatically: waters the web away and scoops it
 Combat	Auto Anchor	Full auto-anchor: places, covers, charges, and detonates with human-like delays
 Misc	Auto Armor	Automatically equips the best armor from your inventory
 Combat	Auto Cart	Automatically places minecarts at your feet for cart-mode combat
+Misc	Auto Bone Block Filler	Fills any open chest with the bone blocks in your inventory
+Misc	Auto Close	Closes a chest, barrel or shulker box once every container slot is taken
 Misc	Auto Clicker	Automatically clicks your mouse
 Combat	Auto Crystal	Automatically places and explodes crystals
 Combat	Auto Drain	Automatically collects water/lava with a bucket
@@ -30,6 +32,7 @@ Combat	Auto Safe Cart	Automatically covers threatening minecarts with blocks
 Combat	Auto Shield	Automatically blocks with your shield in combat
 Combat	Auto Shield Breaker	Automatically breaks shields by silently attacking them
 Movement	Auto Short Pearl	Basically anti knockback
+Misc	Auto Sell	Sends /sell, empties your inventory into the sell window and closes it on a loop
 Misc	Auto Text	Automatically sends a chat message
 Misc	Auto Tool	Automatically swaps to the best tool possible
 Combat	Auto Totem	Automatically re-totems when popped
@@ -56,7 +59,7 @@ Mace	Fast Pearl Catch	Pearl and wind charge back-to-back with no swap between th
 Misc	Fast Place	Allows you to place blocks faster
 Visual	Free Look	Allows you to look around without rotating
 Movement	Freecam	Allows you to move your camera around without actually moving your player
-Misc	Friends	Manages what to do with friends
+Misc	Friends	Friends list, name tags and friend protection
 Combat	Ghost Place	Right-clicks blocks behind enemies instead of interacting with them
 Visual	Health Indicators	Shows health on players
 Visual	Hit Effect	Draws particles when hitting entities

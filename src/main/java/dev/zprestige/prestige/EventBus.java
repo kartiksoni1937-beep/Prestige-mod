@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import dev.zprestige.prestige.util.Log;
 
 public class EventBus {
     private volatile Map listeners = new HashMap();
@@ -162,8 +163,8 @@ public class EventBus {
     private static void logListenerFailure(ListenerEntry entry, Throwable error) {
         String listenerName = entry.getTarget().getClass().getName() + "#" + entry.getMethod().getName();
         if (LOGGED_FAILURES.add(listenerName + ":" + error.getClass().getName())) {
-            System.err.println(LISTENER_ERROR_PREFIX + listenerName);
-            error.printStackTrace();
+            Log.error(LISTENER_ERROR_PREFIX + listenerName);
+            Log.throwable(error);
         }
     }
 

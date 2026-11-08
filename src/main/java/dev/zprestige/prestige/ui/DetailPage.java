@@ -5,6 +5,7 @@ import static dev.zprestige.prestige.ui.Lib.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import dev.zprestige.prestige.util.Log;
 
 /** Port of sub_18012EC00 (module detail panel) and sub_1801252E0 (setting row + widgets). */
 public final class DetailPage {
@@ -97,7 +98,7 @@ public final class DetailPage {
                     fillRect(x + 14f, ((53f - v66 * 48f) * 0.5f) + y, 2f, v66 * 48f, 0f, new float[]{a[0], a[1], a[2], v66 * 0.45f});
                 }
             }
-            if (Boolean.getBoolean("debugRows")) System.out.println("row " + s.name + " y=" + (y + Lib.oy) + " type=" + s.type);
+            if (Boolean.getBoolean("debugRows")) Log.info("row " + s.name + " y=" + (y + Lib.oy) + " type=" + s.type);
             row(s, x, y, pw, rowHot);
             if (i != vis.size() - 1) fillRect(x + 20f, (y + 54f) - 1f, pw - 40f, 1f, 0f, new float[]{0f, 0f, 0f, 0.35f});
             y += 54f;

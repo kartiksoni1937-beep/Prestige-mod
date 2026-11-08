@@ -6,6 +6,7 @@ import dev.zprestige.prestige.Subscribe;
 import dev.zprestige.prestige.client.Prestige;
 import dev.zprestige.prestige.render.RenderEvents;
 import dev.zprestige.prestige.render.RenderCallback;
+import dev.zprestige.prestige.util.Log;
 
 public class ModuleStateSync {
     private boolean hudDrawn;
@@ -39,7 +40,7 @@ public class ModuleStateSync {
                     module.applyState();
                 }
             } catch (Throwable error) {
-                error.printStackTrace();
+                Log.throwable(error);
             }
 
             module.setLastEnabled(enabled);

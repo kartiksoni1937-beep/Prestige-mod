@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * Reflection bridge to the running Prestige client ({@code dev.zprestige.prestige.client.Prestige}).
@@ -34,7 +35,7 @@ public final class Bridge {
             Object mgr = f.get(null);
             if (mgr == null) return false;
             List<?> list = moduleList(mgr);
-            if (list == null) { System.out.println("[prestige-ui] bridge: manager has no module-list accessor"); return false; }
+            if (list == null) { Log.info("[prestige-ui] bridge: manager has no module-list accessor"); return false; }
             if (list.isEmpty()) list = buildModules(prestige, mgr);
             for (Object o : list) {
                 LiveModule m = LiveModule.of(o);
@@ -45,10 +46,10 @@ public final class Bridge {
             if (bound) dev.zprestige.prestige.engine.EngineState.markReady("ClickGUI bridge bound " + MODULES.size() + " modules");
             String dump = System.getProperty("prestige.dump");   // dev: force class init of instrumented classes (DumpHook)
             if (dump != null) DumpHook.init(dump, prestige.getClassLoader());
-            System.out.println("[prestige-ui] bridge " + (bound ? "bound: " + MODULES.size() + " modules" : "found no modules"));
+            Log.info("[prestige-ui] bridge " + (bound ? "bound: " + MODULES.size() + " modules" : "found no modules"));
             return bound;
         } catch (Throwable t) {
-            System.out.println("[prestige-ui] bridge bind failed: " + t);
+            Log.info("[prestige-ui] bridge bind failed: " + t);
             return false;
         }
     }
@@ -72,12 +73,12 @@ public final class Bridge {
             } catch (Throwable t) {
                 fail++;
                 Throwable r = t instanceof java.lang.reflect.InvocationTargetException && t.getCause() != null ? t.getCause() : t;
-                System.out.println("[prestige-ui] bridge: module " + mod.clazz + " (" + mod.name + ") failed: " + r);
-                if (fail <= 3) r.printStackTrace(System.out);
+                Log.info("[prestige-ui] bridge: module " + mod.clazz + " (" + mod.name + ") failed: " + r);
+                if (fail <= 3) Log.throwable(r);
             }
         }
-        System.out.println("[prestige-ui] bridge: built " + built.size() + " modules from manifest, failed " + fail);
-        if (fail > 0) System.err.println("[prestige-ui] bridge: " + fail + " module(s) could not be constructed; see the errors above");
+        Log.info("[prestige-ui] bridge: built " + built.size() + " modules from manifest, failed " + fail);
+        if (fail > 0) Log.error("[prestige-ui] bridge: " + fail + " module(s) could not be constructed; see the errors above");
         if (!built.isEmpty()) {
             for (Method m : mgr.getClass().getDeclaredMethods())
                 if (m.getName().equals("setModules") && m.getParameterCount() == 1 && m.getParameterTypes()[0] == List.class) {
@@ -202,7 +203,7 @@ public final class Bridge {
             Method toggle = method(handle.getClass(), "toggle", 0, void.class);
             if (toggle != null) {
                 try { toggle.setAccessible(true); toggle.invoke(handle); return; }
-                catch (Throwable t) { System.out.println("[prestige-ui] toggle failed for " + name + ": " + (t.getCause() != null ? t.getCause() : t)); }
+                catch (Throwable t) { Log.info("[prestige-ui] toggle failed for " + name + ": " + (t.getCause() != null ? t.getCause() : t)); }
             }
             if (enabledSetting != null) LiveSetting.of(enabledSetting).set(value);
         }

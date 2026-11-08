@@ -7,6 +7,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * Persists the module/HUD state between launches.
@@ -34,23 +35,23 @@ public final class AutoConfig {
         loadAttempted = true;
         ConfigManager manager = Prestige.configManager;
         if (manager == null) {
-            System.out.println("[Prestige] config load skipped: ConfigManager is not initialised");
+            Log.info("[Prestige] config load skipped: ConfigManager is not initialised");
             return;
         }
         Path file = file();
         if (!Files.exists(file)) {
-            System.out.println("[Prestige] no saved config at " + file + " (first launch)");
+            Log.info("[Prestige] no saved config at " + file + " (first launch)");
             return;
         }
         try {
             String json = Files.readString(file);
             manager.loadFromJson(json);
             String report = manager.consumeLoadReport();
-            System.out.println("[Prestige] config loaded from " + file + (report == null || report.isBlank() ? "" : ": " + report));
+            Log.info("[Prestige] config loaded from " + file + (report == null || report.isBlank() ? "" : ": " + report));
         } catch (Throwable error) {
             // A corrupt config must never stop the client from starting.
-            System.err.println("[Prestige] could not load " + file + ": " + error);
-            error.printStackTrace(System.err);
+            Log.error("[Prestige] could not load " + file + ": " + error);
+            Log.throwable(error);
         }
     }
 
@@ -67,8 +68,8 @@ public final class AutoConfig {
             Files.writeString(tmp, json);
             Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         } catch (Throwable error) {
-            System.err.println("[Prestige] could not save the config: " + error);
-            error.printStackTrace(System.err);
+            Log.error("[Prestige] could not save the config: " + error);
+            Log.throwable(error);
         }
     }
 

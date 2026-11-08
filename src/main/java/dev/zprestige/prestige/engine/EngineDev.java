@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.ScreenshotRecorder;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * Dev/test driver for the game hooks. Inactive unless -Dprestige.engine.cmd=&lt;file&gt; is set (gradle: -PengineCmd=&lt;file&gt;).
@@ -35,10 +36,10 @@ public final class EngineDev implements ClientModInitializer {
     @Override public void onInitializeClient() {
         if (CMD == null && reportEvery == 0) return;
         ClientTickEvents.END_CLIENT_TICK.register(EngineDev::tick);
-        System.out.println("[Engine] dev driver active: " + CMD);
+        Log.info("[Engine] dev driver active: " + CMD);
     }
 
-    private static void log(String s) { System.out.println("[Engine] " + s); }
+    private static void log(String s) { Log.info("[Engine] " + s); }
 
     static void tick(MinecraftClient mc) {
         try {
@@ -55,7 +56,7 @@ public final class EngineDev implements ClientModInitializer {
             run(mc, l);
         } catch (Throwable t) {
             log("command failed: " + t);
-            t.printStackTrace(System.out);
+            Log.throwable(t);
         }
     }
 

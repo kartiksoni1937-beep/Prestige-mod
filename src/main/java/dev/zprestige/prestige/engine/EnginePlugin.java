@@ -32,6 +32,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * Applies the ClassTransform transformers of the Prestige client (the original native loader installed them through an agent)
@@ -64,7 +65,7 @@ public final class EnginePlugin implements IMixinConfigPlugin {
             return "named";
         }
         if (reported.equals("named") || reported.equals("intermediary")) return reported;
-        System.out.println("[Engine] runtime reports namespace '" + reported + "'; the classes use intermediary names, so using intermediary");
+        Log.info("[Engine] runtime reports namespace '" + reported + "'; the classes use intermediary names, so using intermediary");
         return "intermediary";
     }
 
@@ -77,7 +78,7 @@ public final class EnginePlugin implements IMixinConfigPlugin {
             if (manager.getTransformedClasses().size() != expectedTargets)
                 throw new IllegalStateException("Expected " + expectedTargets + " Minecraft targets, got " + manager.getTransformedClasses().size());
             EngineState.installed = true;
-            System.out.println("[Engine] namespace=" + namespace + " REGISTERED=" + transformers.size() + " TARGETS=" + expectedTargets);
+            Log.info("[Engine] namespace=" + namespace + " REGISTERED=" + transformers.size() + " TARGETS=" + expectedTargets);
         } catch (Exception e) {
             throw new IllegalStateException("Unable to prepare the Prestige game hooks", e);
         }
@@ -150,7 +151,7 @@ public final class EnginePlugin implements IMixinConfigPlugin {
             for (MethodNode method : node.methods) {
                 if (!hasHook(method)) continue;
                 if (Type.getReturnType(method.desc).getSort() != Type.VOID) {
-                    System.out.println("[Engine] note: non-void callback not gated: " + node.name + "." + method.name);
+                    Log.info("[Engine] note: non-void callback not gated: " + node.name + "." + method.name);
                     continue;
                 }
                 InsnList gate = new InsnList();
@@ -224,7 +225,7 @@ public final class EnginePlugin implements IMixinConfigPlugin {
         } finally {
             liveTarget[0] = null;
         }
-        System.out.println("[Engine] TRANSFORMED=" + targetName);
+        Log.info("[Engine] TRANSFORMED=" + targetName);
     }
 
     /** The anchor mixins for the runtime namespace (Yarn "N" set in the dev client, Intermediary "I" set in production). */

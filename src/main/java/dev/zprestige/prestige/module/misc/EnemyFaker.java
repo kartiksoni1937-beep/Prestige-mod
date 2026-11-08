@@ -5,6 +5,7 @@ import dev.zprestige.prestige.BoolSetting;
 import dev.zprestige.prestige.EnumSetting;
 import dev.zprestige.prestige.Module;
 import dev.zprestige.prestige.Subscribe;
+import dev.zprestige.prestige.util.Log;
 import dev.zprestige.prestige.TextSetting;
 import dev.zprestige.prestige.client.Prestige;
 import dev.zprestige.prestige.event.LabelTextEvent;
@@ -105,10 +106,15 @@ public class EnemyFaker extends Module {
                 String requestedName = this.fakeName.getValue().toString();
                 // Mojang lookups block for several seconds on a bad connection, never do them on the game thread
                 Thread lookup = new Thread(() -> {
-                    UUID uuid = MojangApi.fetchUuid(requestedName);
-                    GameProfile profile = uuid == null ? null : MojangApi.fetchProfile(uuid);
-                    if (profile != null) {
-                        mc.execute(() -> this.applyFakeSkin(profile, requestedName));
+                    try {
+                        UUID uuid = MojangApi.fetchUuid(requestedName);
+                        GameProfile profile = uuid == null ? null : MojangApi.fetchProfile(uuid);
+                        if (profile != null) {
+                            mc.execute(() -> this.applyFakeSkin(profile, requestedName));
+                        }
+                    } catch (Throwable error) {
+                        // never let this thread print an uncaught trace into the game log
+                        Log.throwable(error);
                     }
                 }, "Prestige-SkinLookup");
                 lookup.setDaemon(true);

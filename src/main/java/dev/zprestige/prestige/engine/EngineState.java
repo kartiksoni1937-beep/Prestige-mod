@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * Shared state of the game-hook engine. Loaded by the Mixin config plugin (very early) and referenced from the gate that is
@@ -29,7 +30,7 @@ public final class EngineState {
         LongAdder a = callbacks.get(name);
         if (a == null) {
             a = callbacks.computeIfAbsent(name, k -> {
-                System.out.println("[Engine] FIRST_CALLBACK=" + k);
+                Log.info("[Engine] FIRST_CALLBACK=" + k);
                 return new LongAdder();
             });
         }
@@ -46,7 +47,7 @@ public final class EngineState {
     public static void markReady(String why) {
         if (!ready) {
             ready = true;
-            System.out.println("[Engine] READY (" + why + ") targets transformed=" + transformed.size());
+            Log.info("[Engine] READY (" + why + ") targets transformed=" + transformed.size());
         }
     }
 

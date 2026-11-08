@@ -1,5 +1,6 @@
 package dev.zprestige.prestige.render;
 
+import dev.zprestige.prestige.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -10,11 +11,8 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TextureLoader {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TextureLoader.class);
     private static final boolean ANISOTROPY_SUPPORTED = GL.getCapabilities().GL_EXT_texture_filter_anisotropic;
     private static final float MAX_ANISOTROPY;
 
@@ -105,10 +103,10 @@ public class TextureLoader {
     static {
         if (ANISOTROPY_SUPPORTED) {
             MAX_ANISOTROPY = GL11.glGetFloat(34047);
-            LOGGER.info("Anisotropic filtering supported: Max {}x", MAX_ANISOTROPY);
+            Log.info("Anisotropic filtering supported: Max " + MAX_ANISOTROPY + "x");
         } else {
             MAX_ANISOTROPY = 1.0F;
-            LOGGER.info("Anisotropic filtering not supported");
+            Log.info("Anisotropic filtering not supported");
         }
     }
 }

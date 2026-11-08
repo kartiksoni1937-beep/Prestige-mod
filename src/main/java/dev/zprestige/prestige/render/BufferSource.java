@@ -3,6 +3,7 @@ package dev.zprestige.prestige.render;
 import dev.zprestige.prestige.data.DrawModeBuffers;
 import dev.zprestige.prestige.data.CameraMatrices;
 import dev.zprestige.prestige.data.MeshInfo;
+import dev.zprestige.prestige.util.Log;
 import it.unimi.dsi.fastutil.Pair;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -10,11 +11,8 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.lwjgl.opengl.ARBVertexArrayObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BufferSource {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BufferSource.class);
     private final WeakHashMap buffersByMode = new WeakHashMap();
     private final Set pendingModes = new LinkedHashSet();
     public static final boolean ASSERTIONS_DISABLED = !BufferSource.class.desiredAssertionStatus();
@@ -76,7 +74,7 @@ public class BufferSource {
                 try {
                     this.draw(context, drawMode);
                 } catch (Throwable throwable) {
-                    LOGGER.error("Failed to draw buffered pipeline", throwable);
+                    Log.error("Failed to draw buffered pipeline", throwable);
                 }
             }
         } finally {

@@ -63,6 +63,15 @@ public class Hitboxes extends Module implements RotationProvider {
 
     @Subscribe
     public void onBoundingBox(BoundingBoxEvent event) {
+        // "Hitbox Protection": friends keep their vanilla box while non-friends are expanded as configured.
+        if (dev.zprestige.prestige.social.FriendManager.hitboxProtectionActive()
+            && Prestige.friendManager != null
+            && event.getEntity() instanceof PlayerEntity protectedPlayer
+            && (Prestige.friendManager.hasFriend(protectedPlayer.getUuid())
+                || Prestige.friendManager.hasFriend(protectedPlayer.getName().getString()))) {
+            return;
+        }
+
         if (this.antiCheat.getValue().equals("None")) {
             if (!event.getEntity().equals(mc.player)) {
                 if (!this.playerOnly.getValue() || event.getEntity() instanceof PlayerEntity) {

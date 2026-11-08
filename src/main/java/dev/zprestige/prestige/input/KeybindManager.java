@@ -10,6 +10,7 @@ import dev.zprestige.prestige.event.FrameEvent;
 import dev.zprestige.prestige.render.MinecraftAccess;
 import dev.zprestige.prestige.render.VirtualKeyMapper;
 import java.util.Map;
+import dev.zprestige.prestige.util.Log;
 
 public class KeybindManager implements MinecraftAccess {
     private static Double pendingScaleFactor = null;
@@ -57,7 +58,7 @@ public class KeybindManager implements MinecraftAccess {
                     module.toggle();
                 }
             } catch (Throwable error) {
-                error.printStackTrace();
+                Log.throwable(error);
             }
         }
     }
@@ -100,7 +101,7 @@ public class KeybindManager implements MinecraftAccess {
                         }
                     }
                 } catch (Throwable error) {
-                    error.printStackTrace();
+                    Log.throwable(error);
                 }
             }
         }

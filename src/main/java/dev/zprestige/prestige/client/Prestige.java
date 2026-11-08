@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
+import dev.zprestige.prestige.util.Log;
 
 public class Prestige implements ModInitializer {
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
@@ -136,15 +137,15 @@ public class Prestige implements ModInitializer {
             }
 
             // Report a usable diagnostic instead of a bare stack trace; Fabric will attach it to the crash report.
-            System.err.println("[Prestige] client initialisation failed" + (partiallyInitialized ? " after the module list was built" : " before any module was created") + ": " + error);
-            error.printStackTrace(System.err);
+            Log.error("[Prestige] client initialisation failed" + (partiallyInitialized ? " after the module list was built" : " before any module was created") + ": " + error);
+            Log.throwable(error);
             throw new IllegalStateException("OpenPrestige failed to initialise", error);
         }
     }
 
     public static void logRenderError(Throwable error) {
         if (renderErrorCount.getAndIncrement() < 5) {
-            error.printStackTrace();
+            Log.throwable(error);
         }
     }
 

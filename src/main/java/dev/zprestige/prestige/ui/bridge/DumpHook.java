@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.HashSet;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * Dev tool (client/tools/java/ClinitDump.java): instrumented client classes call {@link #log} for every array load in their
@@ -24,8 +25,8 @@ public final class DumpHook {
             if (!SEEN.add(key)) return;
             Object v = Array.get(arr, idx);
             String t = arr.getClass().getComponentType().getSimpleName();
-            System.out.println("[dump] " + cls + "\tarr" + id + "\t" + Array.getLength(arr) + "\t" + idx + "\t" + t + "\t" + (v == null ? "null" : v.getClass().getSimpleName() + ":" + String.valueOf(v).replace("\n", "\n")));
-        } catch (Throwable t) { System.out.println("[dump] error " + t); }
+            Log.info("[dump] " + cls + "\tarr" + id + "\t" + Array.getLength(arr) + "\t" + idx + "\t" + t + "\t" + (v == null ? "null" : v.getClass().getSimpleName() + ":" + String.valueOf(v).replace("\n", "\n")));
+        } catch (Throwable t) { Log.info("[dump] error " + t); }
     }
 
     /** Forces initialisation of the listed classes (dev.zprestige.prestige.<name>). */
@@ -33,8 +34,8 @@ public final class DumpHook {
         for (String n : list.split(",")) {
             n = n.trim();
             if (n.isEmpty()) continue;
-            try { Class.forName("dev.zprestige.prestige." + n, true, cl); System.out.println("[dump] init ok " + n); }
-            catch (Throwable t) { System.out.println("[dump] init " + n + " failed: " + t + " / " + t.getCause()); }
+            try { Class.forName("dev.zprestige.prestige." + n, true, cl); Log.info("[dump] init ok " + n); }
+            catch (Throwable t) { Log.info("[dump] init " + n + " failed: " + t + " / " + t.getCause()); }
         }
     }
 }

@@ -2,6 +2,7 @@ package dev.zprestige.prestige.inject;
 
 import dev.zprestige.prestige.engine.EnginePlugin;
 import dev.zprestige.prestige.hooks.Definer;
+import dev.zprestige.prestige.util.Log;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public final class SelfTest {
                 moved += result.movedMethods();
             } catch (Throwable t) {
                 out.append("\n  FAIL ").append(target).append(": ").append(t);
-                t.printStackTrace(System.out);
+                Log.throwable(t);
             }
         }
         return out.append("\n  ok=").append(ok).append(" movedHandlers=").append(moved).toString();

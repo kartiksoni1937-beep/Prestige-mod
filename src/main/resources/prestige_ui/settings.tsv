@@ -139,6 +139,9 @@ Auto Cart	dM	Silent Aim	Aims at the landing block server-side; your camera never
 Auto Cart	dO	Silent Aim FOV	Caps silent aim at this yaw offset per tick (degrees).	180.0	0.0	180.0		
 Auto Cart	dM	Render Path	Highlights the predicted landing block while a bow is drawn.	true				
 Auto Cart	dN	Render Color	Sets the landing highlight color.	java.awt.Color[r=131,g=118,b=252]				
+Auto Bone Block Filler	dP	Clicks	Bone blocks moved per tick. Higher fills the chest faster.	9	1	36		
+Auto Bone Block Filler	dP	Delay	Waits at least this long between batches (ms). 0 moves every frame.	50	0	1000		
+Auto Close	dP	Delay	Waits this long after the container is full before closing it (ms).	150	0	1000		
 Auto Clicker	dR	Mode	Ghost clicks humanized; Interval clicks at a fixed rate for farms.	Ghost	[Ghost,Interval]			
 Auto Clicker	dR	Click	Clicks the left or right mouse button (Interval mode only; Ghost is always left).	Left	[Left,Right]			
 Auto Clicker	dP	Interval	Waits this long between clicks (ms).	100	0	10000		
@@ -285,6 +288,12 @@ Auto Shield Breaker	dM	Swap Back	Silently swaps to the axe to break the shield	t
 Auto Shield Breaker	dM	Silent Aim	Silently swaps to the axe to break the shield	false				
 Auto Shield Breaker	dO	Max Yaw	The maximum difference in yaw the player can rotate to	180.0	0.0	180.0		
 Auto Short Pearl	dQ	Delay	Waits a random time in this range before the pearl throw (ms).	30.0	0.0	300.0	30.0	70.0
+Auto Sell	dT	Command	Command that opens the server sell window.	/sell	/sell			
+Auto Sell	dP	Interval	Time between sell cycles (ms).	3000	500	60000		
+Auto Sell	dP	Clicks	Stacks moved into the window per tick.	9	1	36		
+Auto Sell	dP	Delay	Waits at least this long between batches (ms). 0 moves every frame.	50	0	1000		
+Auto Sell	dP	Open Timeout	Gives up and retries next cycle if the window does not open in this time (ms).	2000	200	10000		
+Auto Sell	dM	Close	Closes the window once every stack has been moved.	true				
 Auto Text	dT	Text	Sends this chat text or command; start with / for commands.	/kit 1	Text or Command (/...)			
 Auto Totem	dR	Mode	Crystal runs the full inventory routine; SMP swaps at low health.	Crystal	[Crystal,SMP]			
 Auto Totem	dQ	Delay	Waits a random time in this range between actions (ms).	30.0	0.0	500.0	30.0	50.0
@@ -409,8 +418,10 @@ Fast Place	dP	Max Speed	Sets the highest use cooldown rolled per placement (tick
 Free Look	dM	Third Person	Switches to third person while free-looking.	true				
 Freecam	dO	Speed	Sets camera fly speed (x).	1.0	0.1	10.0		
 Freecam	dM	Render Previous	Keeps drawing your body at its real position.	true				
-Friends	dM	No Attack	Blocks attacks on friends.	false				
-Friends	dM	Highlight	Colors friend names blue.	false				
+Friends	dM	Green Friend Tags	Renders friends' name tags in green.	true				
+Friends	dM	Friend Protect	Targeting modules ignore friends.	true				
+Friends	dM	No Hit	Blocks your own attacks on friends.	true				
+Friends	dM	Hitbox Protection	Keeps friends' hitboxes at vanilla size.	true				
 Ghost Place	dM	Cobweb Only	Restrict placements to cobweb. Off = any block in main hand goes through.	true				
 Ghost Place	dM	Use Offhand	Also accept a placeable in the offhand. Main hand still takes precedence when both hands are placeable — this only catches sword-main + cobweb-offhand loadouts, where vanilla right-click on a mob would enter the entity path before ever reaching offhand block placement.	false				
 Hit Effect	dP	Amount	Spawns this many particles per hit.	10	1	20		

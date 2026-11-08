@@ -101,6 +101,27 @@ jar {
  * Offline self-check of the standalone build (no display or GL needed):
  * manifest modules, engine transformers against the 1.21.11 mappings, repaired mesh contract.
  */
+// src/test holds the verification harnesses (run via verifyClient / probeFlags), not JUnit tests, so the test task has
+// nothing to discover. Gradle 9 treats that as a build error unless it is told otherwise.
+tasks.named('test') {
+    failOnNoDiscoveredTests = false
+}
+
+// The mod is silent unless -Dprestige.debug=true; pass that through to the harness JVMs so their output can be seen.
+tasks.withType(JavaExec).configureEach {
+    if (System.getProperty('prestige.debug') != null) {
+        systemProperty 'prestige.debug', System.getProperty('prestige.debug')
+    }
+}
+
+tasks.register('probeFlags', JavaExec) {
+    group = 'verification'
+    description = 'Constructs every manifest module and reports which ones log a Prestige startup flag.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'dev.zprestige.prestige.verify.FlagProbe'
+}
+
 tasks.register('verifyClient', JavaExec) {
     group = 'verification'
     description = 'Verifies module metadata, the 42 ClassTransform game hooks and the repaired mesh contract.'

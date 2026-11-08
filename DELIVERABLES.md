@@ -18,6 +18,17 @@ BUILD & ARTIFACTS
 - Assets included: MSDF font (inter.json/inter.png), category icons, HUD icons, notification icons
 - Mixin configs: prestige-engine.mixins.json (42 targets) + prestige.mixins.json (EventBusStatsMixin only)
 
+GAME LOG — THE MOD IS SILENT BY DEFAULT
+---------------------------------------
+- Every diagnostic in the port is funnelled through dev.zprestige.prestige.util.Log.
+- Log.OUT is false unless the JVM runs with -Dprestige.debug=true, so with normal PojavLauncher
+  settings nothing from this mod reaches latest.log, stdout or stderr.
+- No direct System.out / System.err / printStackTrace / slf4j logger remains outside Log.java.
+- The only thread the mod starts (EnemyFaker skin lookup) catches its own throwables, so it cannot
+  print an uncaught trace either.
+- To debug on device, add -Dprestige.debug=true to the JVM arguments and the [Prestige] / [Engine] /
+  [prestige-ui] lines come back.
+
 OFFLINE VERIFICATION HARNESS — ALL CHECKS PASS
 -----------------------------------------------
 - 121 module classes load successfully from the JAR
@@ -75,6 +86,68 @@ INITIALIZATION — STANDALONE FABRIC
   boolean; modsl() and loadModuleClass() made public
 - Bridge.java: clearer bind/failure diagnostics; inject/Bootstrap: no silent catch in native probe/start
 - SelfDestruct closes ClickGuiScreen via Input.active instead of deleted Overlay
+
+MODULES ADDED AFTER THE PORT (Misc)
+-----------------------------------
+- Auto Sell — sends the configurable sell command (/sell by default), waits for the server window,
+  shift-clicks the whole player inventory into it, closes it, and repeats every Interval (3000 ms).
+  Settings: Command, Interval, Clicks (stacks per batch), Delay (ms between batches), Open Timeout,
+  Close. A per-cycle cap stops it clicking a window that keeps bouncing items back.
+- Auto Bone Block Filler — whenever a chest-type window is open, shift-clicks every bone block from
+  the player inventory into it, and stops when the inventory has none left or the chest is full.
+  Settings: Clicks (per batch), Delay (ms between batches, 50 = one batch per game tick).
+- Auto Close — watches the open storage window (chest, barrel, ender chest, shulker box, hopper, dispenser,
+  dropper) and closes it once every container slot holds an item, after Delay (150 ms default). Only the
+  container's own slots are counted, so a half-empty chest never closes no matter how full the player
+  inventory is; it never clicks or moves anything. Pairs with Auto Bone Block Filler: the chest shuts itself
+  when full instead of staying open. Setting: Delay (ms).
+- All three are registered in prestige_ui/manifest_live.json (registration + setting injection) and in
+  prestige_ui/modules.tsv + settings.tsv (ClickGUI rows), so they appear in the Misc page like any
+  original module and persist through the normal config save/load.
+- Inventory clicks are paced per batch rather than per frame: the full 36-slot inventory moves in
+  about 200 ms, which is imperceptible but avoids the packet flood that gets inventory modules
+  kicked by server anti-cheat.
+
+FRIENDS (Misc) — REWORKED, CENTRALIZED, PERSISTENT
+--------------------------------------------------
+- social/FriendManager.java is the single friends registry. Friends are keyed by UUID with the last known
+  username stored for display, so a name change keeps the friendship. Name-only entries (added while the UUID
+  was unknown) live in a separate set and are promoted to UUID form the first time that player is seen online.
+- Persistence: <gamedir>/prestige/friends.json, written atomically on every add/remove and read lazily. It is the
+  first real friend store, so there was no older format to migrate.
+- Online tracking: FriendManager.tick() runs from ModuleManager.onClientTick (always, module on or off), rebuilds
+  the online snapshot from the tab list, skips the local player, updates stored usernames and mirrors the result
+  into the existing Socials page. Leaving a server clears the online snapshot; saved friends survive.
+- GUI: the Socials page (existing native page 9) is the friends interface — All Players / Friends tabs, search,
+  per-row "Add friend" / "Remove friend" buttons, avatar cards, and empty states. It was fully built but nothing
+  ever fed it before this change; it is now wired to the manager through onAddFriend/onRemoveFriend, and its
+  header shows "<n> online · <n> friends".
+- Four independent settings: Green Friend Tags, Friend Protect, No Hit, Hitbox Protection (all on by default).
+  * Green Friend Tags: NameTags colors friends green (85,255,85) instead of the usual cyan.
+  * Friend Protect: FriendManager.isFriend(...) is identity AND this switch, so every existing targeting call
+    site (Aim Assist, Kill Aura, Triggerbot, TargetTracker, TargetSelector, ...) honors it with no edits.
+    It stays on while the module is disabled, which is exactly the pre-existing behaviour.
+  * No Hit: the module cancels AttackEntityEvent / ResetAttackCooldownEvent / SwingHandEvent for friends. Every
+    attack path (normal clicks and all combat modules) goes through ClientPlayerInteractionManagerMixin, so one
+    hook covers them. Independent of Friend Protect.
+  * Hitbox Protection: Hitboxes.onBoundingBox returns early for friends, so their box is never expanded; other
+    players keep the configured expansion.
+
+SOCIALS LIST — COMPACT SEARCH + DRAGGABLE SLIDER
+-----------------------------------------------
+- Search field shrunk from 250x35 to 200x30 and moved to the right end of the header row (right edge aligned
+  with the page text at x=1000). Placeholder follows the tab: "Search friends" / "Search players". Same pill,
+  icon, focus border and blinking caret as before; typing, backspace and Esc/Enter behave unchanged.
+- Small vertical slider (6px track, right gutter at x=1076) over the list area whenever the filtered list is
+  taller than the view. Draggable thumb (follows the cursor until release) and tap-to-jump on the track, which
+  also gives touch users a way to scroll without a mouse wheel. Hidden entirely when everything fits.
+- Fixed while wiring this: drawing skipped filtered rows but hover and the Add/Remove buttons still used the
+  raw list index, so with a search active a click could add or remove a different friend than the visible card.
+  Hover, drawing, clicking and scrolling now all use one filtered list (SocialsPage.visibleEntries()).
+- clickYOffset is 0 now, so presses land exactly on what is drawn (it was 10px off, faithful to the original
+  desktop version, which is wrong for touch).
+- verifyClient covers the mechanics headlessly: filter count with a query, scroll clamps at the top and at the
+  list height (which is what decides whether the slider exists), and a filtered list that fits cannot scroll.
 
 REPAIRED SOURCE-CODE DEFECTS
 -----------------------------

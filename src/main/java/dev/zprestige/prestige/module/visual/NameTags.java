@@ -57,6 +57,8 @@ public class NameTags extends Module {
     private static final Color DAMAGE_TRAIL_COLOR = new Color(235, 85, 85, 130);
     private static final Color POP_TEXT_COLOR = new Color(235, 75, 75);
     private static final Color FRIEND_NAME_COLOR = new Color(120, 220, 240);
+    /** Used instead of {@link #FRIEND_NAME_COLOR} while the Friends module's "Green Friend Tags" is on. */
+    private static final Color FRIEND_GREEN_COLOR = new Color(85, 255, 85);
     private Frustum frustum;
     private Map entriesByPlayer = new HashMap();
     private List sortedEntries = new ArrayList();
@@ -79,7 +81,10 @@ public class NameTags extends Module {
                     dev.zprestige.prestige.combat.NameTagEntry previous = (dev.zprestige.prestige.combat.NameTagEntry)this.displayEntries.get(player);
                     dev.zprestige.prestige.combat.NameTagEntry entry = new dev.zprestige.prestige.combat.NameTagEntry();
                     entry.name = player.getName().getString();
-                    entry.nameColor = Prestige.friendManager.isFriend(entry.name) ? FRIEND_NAME_COLOR : HudStyle.TEXT_COLOR;
+                    boolean friendName = Prestige.friendManager.hasFriend(entry.name);
+                    entry.nameColor = friendName
+                        ? (dev.zprestige.prestige.social.FriendManager.greenTags() ? FRIEND_GREEN_COLOR : FRIEND_NAME_COLOR)
+                        : HudStyle.TEXT_COLOR;
                     float health = player.getHealth() + player.getAbsorptionAmount();
                     entry.healthRatio = UiMath.clamp(health / Math.max(1.0F, player.getMaxHealth() + player.getAbsorptionAmount()), 0.0F, 1.0F);
                     float previousDisplayed = previous == null ? entry.healthRatio : previous.displayedHealthRatio;

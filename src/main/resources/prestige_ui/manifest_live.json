@@ -1484,6 +1484,57 @@
       ]
     },
     {
+      "class": "dev.zprestige.prestige.module.misc.AutoClose",
+      "name": "Auto Close",
+      "desc": "Closes a chest, barrel or shulker box once every container slot is taken",
+      "category": "Misc",
+      "enabled": false,
+      "settings": [
+        {
+          "field": "delay",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Delay",
+          "desc": "Waits this long after the container is full before closing it (ms).",
+          "value": "150",
+          "props": {
+            "min": "0",
+            "max": "1000"
+          }
+        }
+      ]
+    },
+    {
+      "class": "dev.zprestige.prestige.module.misc.AutoBoneBlockFiller",
+      "name": "Auto Bone Block Filler",
+      "desc": "Fills any open chest with the bone blocks in your inventory",
+      "category": "Misc",
+      "enabled": false,
+      "settings": [
+        {
+          "field": "clicks",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Clicks",
+          "desc": "Bone blocks moved per tick. Higher fills the chest faster.",
+          "value": "9",
+          "props": {
+            "min": "1",
+            "max": "36"
+          }
+        },
+        {
+          "field": "delay",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Delay",
+          "desc": "Waits at least this long between batches (ms). 0 moves every frame.",
+          "value": "50",
+          "props": {
+            "min": "0",
+            "max": "1000"
+          }
+        }
+      ]
+    },
+    {
       "class": "dev.zprestige.prestige.module.misc.AutoClicker",
       "name": "Auto Clicker",
       "desc": "Automatically clicks your mouse",
@@ -3095,6 +3146,77 @@
       ]
     },
     {
+      "class": "dev.zprestige.prestige.module.misc.AutoSell",
+      "name": "Auto Sell",
+      "desc": "Sends /sell, empties your inventory into the sell window and closes it on a loop",
+      "category": "Misc",
+      "enabled": false,
+      "settings": [
+        {
+          "field": "command",
+          "setClass": "dev.zprestige.prestige.TextSetting",
+          "name": "Command",
+          "desc": "Command that opens the server sell window.",
+          "value": "/sell",
+          "props": {
+            "placeholder": "/sell"
+          }
+        },
+        {
+          "field": "interval",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Interval",
+          "desc": "Time between sell cycles (ms).",
+          "value": "3000",
+          "props": {
+            "min": "500",
+            "max": "60000"
+          }
+        },
+        {
+          "field": "clicks",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Clicks",
+          "desc": "Stacks moved into the window per tick.",
+          "value": "9",
+          "props": {
+            "min": "1",
+            "max": "36"
+          }
+        },
+        {
+          "field": "delay",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Delay",
+          "desc": "Waits at least this long between batches (ms). 0 moves every frame.",
+          "value": "50",
+          "props": {
+            "min": "0",
+            "max": "1000"
+          }
+        },
+        {
+          "field": "openTimeout",
+          "setClass": "dev.zprestige.prestige.IntSetting",
+          "name": "Open Timeout",
+          "desc": "Gives up and retries next cycle if the window does not open in this time (ms).",
+          "value": "2000",
+          "props": {
+            "min": "200",
+            "max": "10000"
+          }
+        },
+        {
+          "field": "close",
+          "setClass": "dev.zprestige.prestige.BoolSetting",
+          "name": "Close",
+          "desc": "Closes the window once every stack has been moved.",
+          "value": "true",
+          "props": {}
+        }
+      ]
+    },
+    {
       "class": "dev.zprestige.prestige.module.misc.AutoText",
       "name": "Auto Text",
       "desc": "Automatically sends a chat message",
@@ -4610,24 +4732,40 @@
     {
       "class": "dev.zprestige.prestige.module.misc.Friends",
       "name": "Friends",
-      "desc": "Manages what to do with friends",
+      "desc": "Friends list, name tags and friend protection",
       "category": "Misc",
       "enabled": false,
       "settings": [
         {
-          "field": "noAttack",
+          "field": "greenTags",
           "setClass": "dev.zprestige.prestige.BoolSetting",
-          "name": "No Attack",
-          "desc": "Blocks attacks on friends.",
-          "value": "false",
+          "name": "Green Friend Tags",
+          "desc": "Renders friends' name tags in green.",
+          "value": "true",
           "props": {}
         },
         {
-          "field": "highlight",
+          "field": "protect",
           "setClass": "dev.zprestige.prestige.BoolSetting",
-          "name": "Highlight",
-          "desc": "Colors friend names blue.",
-          "value": "false",
+          "name": "Friend Protect",
+          "desc": "Targeting modules ignore friends.",
+          "value": "true",
+          "props": {}
+        },
+        {
+          "field": "noHit",
+          "setClass": "dev.zprestige.prestige.BoolSetting",
+          "name": "No Hit",
+          "desc": "Blocks your own attacks on friends.",
+          "value": "true",
+          "props": {}
+        },
+        {
+          "field": "hitboxProtect",
+          "setClass": "dev.zprestige.prestige.BoolSetting",
+          "name": "Hitbox Protection",
+          "desc": "Keeps friends' hitboxes at vanilla size.",
+          "value": "true",
           "props": {}
         }
       ]

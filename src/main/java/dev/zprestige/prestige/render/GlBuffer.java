@@ -6,11 +6,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class GlBuffer implements AutoCloseable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GlBuffer.class);
     private final int glId;
     private final AtomicLong size;
     private final Cleanable cleanable;

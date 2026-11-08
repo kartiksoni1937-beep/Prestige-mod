@@ -27,6 +27,11 @@ public class ModuleManager implements MinecraftAccess {
 
     @Subscribe
     public void onClientTick(ClientTickEvent event) {
+        // Keeps the friends registry and the Socials page in step with the server, even while the module is off.
+        if (Prestige.friendManager != null) {
+            Prestige.friendManager.tick();
+        }
+
         if (mc.world != null && mc.player != null) {
             while (!this.enableQueue.isEmpty()) {
                 Module pendingEnable = (Module)this.enableQueue.poll();

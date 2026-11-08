@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
+import dev.zprestige.prestige.util.Log;
 
 public class MojangApi {
     public static UUID fetchUuid(String username) {
@@ -30,7 +31,7 @@ public class MojangApi {
                 return uuid;
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
+            Log.throwable(exception);
             return null;
         }
     }
@@ -64,7 +65,7 @@ public class MojangApi {
                 return profile;
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
+            Log.throwable(exception);
             return null;
         }
     }

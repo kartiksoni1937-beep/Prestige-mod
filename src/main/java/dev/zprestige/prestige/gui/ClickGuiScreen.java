@@ -24,6 +24,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.input.CharInput;
 import net.minecraft.client.input.KeyInput;
 import org.joml.Matrix4f;
+import dev.zprestige.prestige.util.Log;
 
 /**
  * The Prestige ClickGUI as a real Minecraft screen, drawn with the client's own renderer.
@@ -166,7 +167,7 @@ public class ClickGuiScreen extends BaseScreen implements MinecraftAccess {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[prestige-ui] could not read the window position: " + t);
+            Log.info("[prestige-ui] could not read the window position: " + t);
         }
     }
 
@@ -176,7 +177,7 @@ public class ClickGuiScreen extends BaseScreen implements MinecraftAccess {
             if (f != null) Files.writeString(f, "{\"x\": " + fracX + ", \"y\": " + fracY + ", \"allowUpscale\": " + allowUpscale
                     + ", \"theme\": " + dev.zprestige.prestige.ui.Theme.active + "}\n");
         } catch (Throwable t) {
-            System.out.println("[prestige-ui] could not save the window position: " + t);
+            Log.info("[prestige-ui] could not save the window position: " + t);
         }
     }
 
@@ -230,12 +231,12 @@ public class ClickGuiScreen extends BaseScreen implements MinecraftAccess {
             Ui.initEntries(icons);
             Theme.active = UiThemeMemory.active;
             dataLoaded = true;
-            System.out.println("[prestige-ui] ClickGUI data loaded (" + dev.zprestige.prestige.ui.ModulesPage.P.mods.size() + " modules, bridge=" + dev.zprestige.prestige.ui.bridge.Bridge.available() + ")");
+            Log.info("[prestige-ui] ClickGUI data loaded (" + dev.zprestige.prestige.ui.ModulesPage.P.mods.size() + " modules, bridge=" + dev.zprestige.prestige.ui.bridge.Bridge.available() + ")");
         } catch (Throwable t) {
             // A broken resource must not take down the game; report it once and leave the GUI closed but usable later.
             dataFailed = true;
-            System.out.println("[prestige-ui] ClickGUI resources failed to load: " + t);
-            t.printStackTrace(System.out);
+            Log.info("[prestige-ui] ClickGUI resources failed to load: " + t);
+            Log.throwable(t);
         }
     }
 
