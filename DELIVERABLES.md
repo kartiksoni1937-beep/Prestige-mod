@@ -133,6 +133,30 @@ FRIENDS (Misc) — REWORKED, CENTRALIZED, PERSISTENT
   * Hitbox Protection: Hitboxes.onBoundingBox returns early for friends, so their box is never expanded; other
     players keep the configured expansion.
 
+SAFE ANCHOR — FIXED LEGIT AND BLATANT PATHS
+------------------------------------------
+Legit (places a cover at the player's own crosshair):
+- The aim test required the crosshair on the block directly under the anchor, whose only visible faces are
+  its sides - effectively unhittable while charging the anchor, so the cover almost never ran. Any face whose
+  placement lands in a free block touching the anchor is accepted now, the damage is simulated with and
+  without that block, and the cover is only placed when it actually lowers the damage (and to <= Max Damage).
+- Also checks the destination is empty of entities, so the module does not burn an anchor's single cover on a
+  placement the server will refuse.
+Blatant (places covers itself with silent rotations):
+- Deadlock fixed: it only accepted a candidate once the limited silent rotation already pointed at the block
+  and returned null otherwise, which means "do not rotate" - so the aim never converged and no cover was ever
+  placed. A clamped rotation is now handed back so the manager keeps turning, and the cover is placed on the
+  tick the ray actually reaches it.
+- FOV is measured against the real target instead of the clamped step, so the setting bounds what it claims to.
+- Cover candidates are the anchor's six faces (with the block below as the click target) instead of the old
+  11x11 sweep, and the world scan is limited to reach, which removes the per-tick full-cube scan.
+Own-anchor tracking (Only Own):
+- Placements of respawn anchors made by this client are recorded by the always-registered block listener and
+  cleared when the anchor disappears, instead of being collected only while Safe Anchor happened to be enabled.
+  Enabling the module mid-fight, or rejoining, no longer leaves Only Own with an empty set and no covers.
+- Legit mode adopts the nearest own anchor in reach when it has not seen a placement, so it also works when
+  the anchor was placed before the module was enabled.
+
 SOCIALS LIST — COMPACT SEARCH + DRAGGABLE SLIDER
 -----------------------------------------------
 - Search field shrunk from 250x35 to 200x30 and moved to the right end of the header row (right edge aligned

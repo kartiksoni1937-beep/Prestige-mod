@@ -22,3 +22,6 @@ openvape.zip
 
 # Development tools (not part of the mod)
 /.tools/
+
+# release artifact copies of build/libs/*.jar
+/OpenPrestige-*.jar

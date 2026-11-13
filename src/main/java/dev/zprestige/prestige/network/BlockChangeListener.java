@@ -7,6 +7,8 @@ import dev.zprestige.prestige.math.BlockChangeTracker;
 import dev.zprestige.prestige.render.MinecraftAccess;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
@@ -32,10 +34,17 @@ public final class BlockChangeListener implements MinecraftAccess {
             if (blockUpdate.getState() != null && (blockUpdate.getState().isAir() || blockUpdate.getState().getBlock() == Blocks.FIRE)) {
                 BlockChangeTracker.markCleared(blockUpdate.getPos(), now);
             }
+            // The anchor is gone once the server replaces it with anything that is not an anchor.
+            if (blockUpdate.getState() != null && !blockUpdate.getState().isOf(Blocks.RESPAWN_ANCHOR)) {
+                BlockChangeTracker.clearOwnAnchor(blockUpdate.getPos());
+            }
         } else if (event.getPacket() instanceof ChunkDeltaUpdateS2CPacket deltaUpdate) {
             deltaUpdate.visitUpdates((pos, state) -> {
                 if (state.isAir() || state.getBlock() == Blocks.FIRE) {
                     BlockChangeTracker.markCleared(pos, now);
+                }
+                if (!state.isOf(Blocks.RESPAWN_ANCHOR)) {
+                    BlockChangeTracker.clearOwnAnchor(pos);
                 }
             });
         } else if (event.getPacket() instanceof ExplosionS2CPacket explosion) {
@@ -50,7 +59,15 @@ public final class BlockChangeListener implements MinecraftAccess {
     public void onPacketSend(PacketSendEvent event) {
         if (event.getPacket() instanceof PlayerInteractBlockC2SPacket interactPacket) {
             if (mc.player != null && mc.world != null) {
-                if (mc.player.getStackInHand(interactPacket.getHand()).getItem() instanceof BlockItem) {
+                ItemStack used = mc.player.getStackInHand(interactPacket.getHand());
+                if (used.getItem() == Items.RESPAWN_ANCHOR) {
+                    // Remember anchors this client places, whether or not an anchor module is enabled right now.
+                    BlockHitResult anchorHit = interactPacket.getBlockHitResult();
+                    BlockPos anchorPos = mc.world.getBlockState(anchorHit.getBlockPos()).isReplaceable()
+                        ? anchorHit.getBlockPos()
+                        : anchorHit.getBlockPos().offset(anchorHit.getSide());
+                    BlockChangeTracker.markOwnAnchor(anchorPos);
+                } else if (used.getItem() instanceof BlockItem) {
                     BlockHitResult hitResult = interactPacket.getBlockHitResult();
                     BlockPos clickedPos = hitResult.getBlockPos();
                     if (mc.world.getBlockState(clickedPos).getBlock() != Blocks.RESPAWN_ANCHOR) {
